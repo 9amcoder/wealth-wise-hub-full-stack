@@ -1,10 +1,6 @@
-import LandingComponent from "@/components/LandingComponent";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import LandingComponent from "@/components/landingPage/LandingComponent";
 
-interface LandingPageProps {}
-
-const LandingPage: React.FC<LandingPageProps> = () => {
+const LandingPage: React.FC = () => {
   return (
     <LandingComponent />
   );
