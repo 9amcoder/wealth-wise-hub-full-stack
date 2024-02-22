@@ -9,10 +9,31 @@ import {
 import { Label } from "@/components/ui/label";
 import React from "react";
 import { Wallet2, CircleDollarSign } from "lucide-react";
-import Chart from "@/components/ui/chart";
+import LineChartComponent from "@/components/ui/chart";
 
 interface AnalyticPageProps {}
-
+const data = {
+  labels: ["January", "February", "March", "April", "May", "June", "July"],
+  datasets: [
+    {
+      label: "Budget",
+      data: [65, 59, 80, 81, 56, 55, 40],
+      fill: false,
+      borderColor: "rgba(75, 192, 192, 1)",
+      pointBorderColor: "blue",
+      tension: 0.1,
+    },
+    {
+      label: "Expenses",
+      data: [15, 30, 70, 50, 46, 49, 30],
+      fill: false,
+      borderColor: "rgba(45, 102, 92, 1)",
+      borderDash: [5, 5],
+      pointBorderColor: "green",
+      tension: 0.1,
+    },
+  ],
+};
 const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   return (
     <div className="p-3 grid gap-2 m-[2]">
@@ -93,7 +114,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
         </CardHeader>
         <CardContent className="pb-4">
           <div className="h-[400px]">
-            <Chart></Chart>
+            <LineChartComponent data={data} />
           </div>
         </CardContent>
       </Card>
