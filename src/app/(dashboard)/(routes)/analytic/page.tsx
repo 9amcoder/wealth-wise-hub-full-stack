@@ -1,39 +1,104 @@
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import React from "react";
 import { Wallet2, CircleDollarSign } from "lucide-react";
-interface AnalyticPageProps {
-    
-}
- 
-const AnalyticPage: React.FC<AnalyticPageProps> = () => {
-    return ( 
-    <div className="flex flex-col items-center justify-top">
-     <section className="w-full py-12 md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-5 border-solid border-2 border-gray-200 border-radius:2px rounded-md">
-            <div className="text-center space-y-5">
-              <div className="grid grid-cols-1 gap-8 mt-8 sm:grid-cols-2 lg:grid-cols-2">
-                {/* <div className="flex flex-col items-center space-y-4"> */}
-                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-[#e6bb87] to-[#bfab93]">
-                    <Wallet2 size={24} color="#804908" /> 
-                  </div> Goals
-                {/* </div> */}
-                <div className="grid grid-cols-1 divide-x"></div>
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2]">
-                    <CircleDollarSign size={24} color="#fff" />
-                  </div> Expenses
-                </div>
-                
-                <div className="flex flex-col items-center space-y-4">
+import Chart from "@/components/ui/chart";
 
+interface AnalyticPageProps {}
+
+const AnalyticPage: React.FC<AnalyticPageProps> = () => {
+  return (
+    <div className="p-3 grid gap-2 m-[2]">
+      <Card>
+        <div className="p-2 grid grid-cols-2 divide-x divide-gray-300">
+          <CardContent>
+            <div className="col-span-1 ">
+              <div className="m-3 grid grid-cols-3 gap-1">
+                <div className="col-span-1 flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-[#F5DA91] to-[#FFCC99]">
+                  <Wallet2
+                    className="p-2 align-items: flex-start"
+                    size={50}
+                    color="#804908"
+                  />
+                </div>
+                <div className="p-3 col-span-1 align-items: center flex flex-col">
+                  <h3 className="pb-6">Goals</h3>
+                  <Label className="pt-3 text-gray-10">$899.00</Label>
+                </div>
+                <div className="col-span-1 flex flex-row-reverse">
+                  <Button
+                    className="text-gray-700 outline-none rounded-md focus:border-gray-400 focus:border float-left"
+                    variant="outline"
+                    size="sm">
+                    Modify
+                  </Button>
                 </div>
               </div>
             </div>
+          </CardContent>
+          <CardContent>
+            <div className="col-span-1 ">
+              <div className="m-3 grid grid-cols-3 gap-1">
+                <div className="col-span-1 flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-[#9ADAFF] to-[#99CCFF]">
+                  <CircleDollarSign
+                    className="p-2 align-items: flex-start"
+                    size={50}
+                    color="#16395B"
+                  />
+                </div>
+                <div className="p-3 col-span-1 align-items: center flex flex-col">
+                  <h3 className="pb-6">Expenses</h3>
+                  <Label className="pt-3 text-gray-10">$899.00</Label>
+                </div>
+                <div className="col-span-1 flex flex-row-reverse">
+                  <Button
+                    className="text-gray-700 outline-none p-2 rounded-md focus:border-gray-400 focus:border"
+                    variant="outline"
+                    size="sm">
+                    Details
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="p-2 grid grid-cols-2 divide-x divide-gray-300">
+          <CardContent>
+            <div className="col-span-1">
+              <Label>Insights</Label>
+              <CardDescription>18% overbudget in last 5 weeks.</CardDescription>
+            </div>
+          </CardContent>
+          <CardContent>
+            <div className="col-span-2">
+              <Label>Recommendations</Label>
+              <CardDescription>18% overbudget in last 5 weeks.</CardDescription>
+            </div>
+          </CardContent>
+        </div>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Statistics</CardTitle>
+        </CardHeader>
+        <CardContent className="pb-4">
+          <div className="h-[400px]">
+            <Chart></Chart>
           </div>
-        </div>
-      </section>
-            <section> GRAPH</section>
-        </div>
-     );
-}
- 
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 export default AnalyticPage;
