@@ -17,3 +17,12 @@ model DemoTable {
   title            String     @unique
   createdAt         DateTime   @default(now())
 }
+
+model Transaction {
+  id                String     @id @default(uuid())
+  title             String     @unique
+  amount            Float      @default(0)
+  transactionDate   DateTime   @default(now())
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
