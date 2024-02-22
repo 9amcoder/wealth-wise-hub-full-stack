@@ -5,18 +5,18 @@ import { ColumnDef } from "@tanstack/react-table"
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
 export type PreviewTransaction = {
-    datetime: string
-    item: string
+    transactionDate: string
+    title: string
     amount: number
 }
 
 export const previewColumns: ColumnDef<PreviewTransaction>[] = [
     {
-        accessorKey: "datetime",
+        accessorKey: "transactionDate",
         header: () => <div className="text-[#282458]">DateTime</div>,
     },
     {
-        accessorKey: "item",
+        accessorKey: "title",
         header: () => <div className="text-[#282458]">Item</div>,
     },
     {

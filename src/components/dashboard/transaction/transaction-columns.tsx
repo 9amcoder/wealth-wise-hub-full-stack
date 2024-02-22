@@ -7,14 +7,14 @@ import { ArrowUpDown, } from "lucide-react"
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
 export type Transaction = {
-    datetime: string
-    item: string
+    transactionDate: string
+    title: string
     amount: number
 }
 
 export const transactionColumns: ColumnDef<Transaction>[] = [
     {
-        accessorKey: "datetime",
+        accessorKey: "transactionDate",
         header: ({ column }) => {
             return (
                 <Button
@@ -29,7 +29,7 @@ export const transactionColumns: ColumnDef<Transaction>[] = [
         },
     },
     {
-        accessorKey: "item",
+        accessorKey: "title",
         header: ({ column }) => {
             return (
                 <Button

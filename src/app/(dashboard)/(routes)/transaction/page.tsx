@@ -1,6 +1,6 @@
 'use client'
 
-import React, {ChangeEvent, useState} from "react";
+import React, {ChangeEvent, useEffect, useState} from "react";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -19,47 +19,12 @@ import { TransactionDataTable } from "@/components/dashboard/transaction/transac
 
 interface TransactionPageProps {}
 
-const transactions = [
-    {
-        datetime: "2023-05-01 10:47:05",
-        item: "Banana",
-        amount: 20.00
-    },
-    {
-        datetime: "2023-05-19 04:01:27",
-        item: "Orange",
-        amount: 15.00
-    },
-    {
-        datetime: "2023-07-25 02:26:41",
-        item: "Cupcake",
-        amount: 32.50
-    },
-    {
-        datetime: "2023-04-03 05:51:56",
-        item: "Bowling",
-        amount: 549.67
-    },
-    {
-        datetime: "2023-10-12 21:52:52",
-        item: "Grape",
-        amount: 43.34
-    },
-    {
-        datetime: "2023-08-08 08:56:38",
-        item: "Milk",
-        amount: 11.45
-    },
-    {
-        datetime: "2023-02-04 10:03:33",
-        item: "Tim Hortons",
-        amount: 3.76
-    },
-]
-
 const TransactionPage: React.FC<TransactionPageProps> = () => {
 
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
+
+    const [data, setData] = useState([])
+    const [isLoading, setLoading] = useState(true)
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -72,6 +37,22 @@ const TransactionPage: React.FC<TransactionPageProps> = () => {
             reader.readAsDataURL(file);
         }
     };
+
+    // fetch data from the server (see app/api folder)
+    useEffect(() => {
+        fetch('/api/transactions')
+          .then((res) => res.json())
+          .then((data) => {
+            setData(data)
+            setLoading(false)
+          })
+      }, [])
+
+    if (isLoading) return <p>Loading...</p>
+
+    if (!data || (Array.isArray(data) && data.length === 0)) {
+        return <p>No transaction data</p>;
+      }
 
     return (
         <div className="grid gap-3 m-[2]">
@@ -110,7 +91,7 @@ const TransactionPage: React.FC<TransactionPageProps> = () => {
                             <CardTitle className="text-[#282458]">Preview</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <PreviewDataTable columns={previewColumns} data={transactions}/>
+                            <PreviewDataTable columns={previewColumns} data={data}/>
                         </CardContent>
                     </Card>
                 </div>
@@ -121,7 +102,7 @@ const TransactionPage: React.FC<TransactionPageProps> = () => {
                         <CardTitle className="text-[#282458]">Transactions</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <TransactionDataTable columns={transactionColumns} data={transactions}/>
+                        <TransactionDataTable columns={transactionColumns} data={data}/>
                     </CardContent>
                 </Card>
             </div>
