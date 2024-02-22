@@ -22,7 +22,9 @@ ChartJS.register(
 
 const options = {
   plugins: {
-    legend: true,
+    legend: {
+      display: true,
+    },
     title: {
       display: true,
       text: " Statistics",
@@ -31,10 +33,11 @@ const options = {
   responsive: true,
   scales: {
     y: {
-      type: "linear",
+      type: "linear" as const, // specify the type as a constant
     },
   },
 };
+
 const LineChartComponent = ({ data }: any) => {
   return (
     <div>
