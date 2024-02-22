@@ -1,11 +1,14 @@
+import { UserButton, UserProfile } from "@clerk/nextjs";
+import { User } from "@clerk/nextjs/server";
+
 interface AccountPageProps {
     
 }
  
 const AccountPage: React.FC<AccountPageProps> = () => {
     return ( 
-        <div className="flex flex-col items-center justify-center min-h-screen">
-            <h1 className="mb-5">Account page </h1>
+        <div className="flex justify-center w-full min-h-screen">
+            <UserProfile/>
         </div>
      );
 }
