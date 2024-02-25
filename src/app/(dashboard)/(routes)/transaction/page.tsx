@@ -75,7 +75,7 @@ const TransactionPage: React.FC<TransactionPageProps> = () => {
                                                     className="rounded-md"
                                                     height={0}
                                                     width={0}
-                                                    style={{width: '200px', height: '425px'}}
+                                                    style={{width: 'auto', height: '255px'}}
                                                 />
                                             </div>
                                         )}

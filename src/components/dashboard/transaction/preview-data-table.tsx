@@ -32,7 +32,7 @@ export function PreviewDataTable<TData, TValue>({columns, data,}: PreviewDataTab
     })
 
     return (
-        <div className="h-[470px]">
+        <div className="h-[300px]">
             <div className="rounded-md border">
                 <Table>
                     <TableHeader>

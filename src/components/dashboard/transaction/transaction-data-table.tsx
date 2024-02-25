@@ -73,9 +73,9 @@ export function TransactionDataTable<TData, TValue>({columns, data,}: Transactio
                 <div className="col-span-1 w-[1000px]">
                     <Input
                         placeholder="Filter item..."
-                        value={(table.getColumn("item")?.getFilterValue() as string) ?? ""}
+                        value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
                         onChange={(event) =>
-                            table.getColumn("item")?.setFilterValue(event.target.value)
+                            table.getColumn("title")?.setFilterValue(event.target.value)
                         }
                         className="max-w-sm text-[#282458] bg-[#F3F3FC]"
                     />
