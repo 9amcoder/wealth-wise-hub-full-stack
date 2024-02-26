@@ -16,15 +16,18 @@ import { PreviewTransaction, previewColumns } from "@/components/dashboard/trans
 import { Transaction, transactionColumns } from "@/components/dashboard/transaction/transaction-columns";
 import { PreviewDataTable } from "@/components/dashboard/transaction/preview-data-table";
 import { TransactionDataTable } from "@/components/dashboard/transaction/transaction-data-table";
+import { useUser } from "@clerk/nextjs";
 
 interface TransactionPageProps {}
 
 const TransactionPage: React.FC<TransactionPageProps> = () => {
 
     const [selectedFile, setSelectedFile] = useState<string | null>(null);
+    const { user, isLoaded } = useUser();
 
     const [data, setData] = useState([])
     const [isLoading, setLoading] = useState(true)
+    const [error, setError] = useState('')
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -40,15 +43,32 @@ const TransactionPage: React.FC<TransactionPageProps> = () => {
 
     // fetch data from the server (see app/api folder)
     useEffect(() => {
-        fetch('/api/transactions')
-          .then((res) => res.json())
-          .then((data) => {
-            setData(data)
-            setLoading(false)
-          })
-      }, [])
+        const fetchData = async () => {
+            if (user?.id && isLoaded) {
+                try {
+                    //TODO: Temporary hardcoded user id for testing
+                    const response = await fetch(`/api/transactions/user_2cshbGwAojpabypE6rZc0vRFWt7`);
+                    const data = await response.json();
+                    setData(data);
+                    setLoading(false);
+                } catch (error) {
+                    console.error('Error:', error);
+                    setError('Error fetching data');
+                }
+            }
+        };
+    
+        const delay = 2000; // Delay in milliseconds
+        setTimeout(fetchData, delay);
+    }, [user?.id, isLoaded]);
 
-    if (isLoading) return <p>Loading...</p>
+    if (isLoading) {
+        return <div> loading...</div>
+    }
+
+    if (error) {
+        return <div> Error: {error}</div>
+    }
 
     if (!data || (Array.isArray(data) && data.length === 0)) {
         return <p>No transaction data</p>;
