@@ -4,8 +4,8 @@ const prisma = new PrismaClient();
 
 export async function GET(){
     try {
-        const transactions = await prisma.transaction.findMany();
-        return Response.json(transactions);
+        const users = await prisma.user.findMany();
+        return Response.json(users);
     } catch (error) {
         console.error(error);
         return Response.error();
