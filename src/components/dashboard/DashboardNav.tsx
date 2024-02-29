@@ -18,7 +18,7 @@ const DashBoardNav: React.FC<DashBoardNavProps> = () => {
       <div className="flex w-full justify-end">
         <div className="flex items-center space-x-4">
           <div>
-            Hello, {user?.fullName || "Guest"}
+            Hello, {user?.firstName || "Guest"}
           </div>
         <UserButton afterSignOutUrl="/" />
         </div>
