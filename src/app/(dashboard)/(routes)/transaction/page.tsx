@@ -137,7 +137,7 @@ const TransactionPage: React.FC<TransactionPageProps> = () => {
                                             <DialogHeader>
                                                 <DialogTitle className="text-[#282458]">Add new transaction</DialogTitle>
                                                 <DialogDescription>
-                                                    Enter information for new transaction here. Click save when you're done.
+                                                    Enter information for new transaction here. Click save when you are done.
                                                 </DialogDescription>
                                             </DialogHeader>
                                             <div className="grid gap-4 py-4">
