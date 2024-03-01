@@ -34,7 +34,7 @@ model Transaction {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   userId          String // This is the foreign key that references the User model
-  user            User?             @relation(fields: [userId], references: [clerkUserId])
+  user            User?            @relation(fields: [userId], references: [clerkUserId], onDelete: Cascade)
   insightHistory  InsightHistory[] // This field represents the one-to-many relationship
 }
 
@@ -46,7 +46,7 @@ model GoalHistory {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   userId         String // This is the foreign key that references the User model
-  user           User             @relation(fields: [userId], references: [clerkUserId])
+  user           User             @relation(fields: [userId], references: [clerkUserId], onDelete: Cascade)
   insightHistory InsightHistory[] // This field represents the one-to-many relationship
 }
 
@@ -56,7 +56,7 @@ model BalanceHistory {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   userId         String // This is the foreign key that references the User model
-  user           User             @relation(fields: [userId], references: [clerkUserId])
+  user           User             @relation(fields: [userId], references: [clerkUserId], onDelete: Cascade)
   insightHistory InsightHistory[] // This field represents the one-to-many relationship
 }
 
@@ -64,15 +64,15 @@ model InsightHistory {
   id                      String                @id @default(uuid())
   insight                 String
   balanceId               String // This is the foreign key that references the BalanceHistory model
-  balance                 BalanceHistory        @relation(fields: [balanceId], references: [id])
+  balance                 BalanceHistory        @relation(fields: [balanceId], references: [id], onDelete: Cascade)
   goalId                  String // This is the foreign key that references the GoalHistory model
-  goal                    GoalHistory           @relation(fields: [goalId], references: [id])
+  goal                    GoalHistory           @relation(fields: [goalId], references: [id], onDelete: Cascade)
   expenseId               String // This is the foreign key that references the Transaction model
-  expense                 Transaction           @relation(fields: [expenseId], references: [id])
+  expense                 Transaction           @relation(fields: [expenseId], references: [id], onDelete: Cascade)
   createdAt               DateTime              @default(now())
   updatedAt               DateTime              @updatedAt
   userId                  String // This is the foreign key that references the User model
-  user                    User                  @relation(fields: [userId], references: [clerkUserId])
+  user                    User                  @relation(fields: [userId], references: [clerkUserId], onDelete: Cascade)
   recommendationHistoryId String                @unique // This is the foreign key that references the RecommendationHistory model
   recommendationHistory   RecommendationHistory @relation(fields: [recommendationHistoryId], references: [id])
 }
