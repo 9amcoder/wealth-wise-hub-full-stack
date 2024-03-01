@@ -13,23 +13,74 @@ datasource db {
 }
 
 model User {
-  id                String        @id @default(uuid())
-  clerkUserId       String        @unique
-  email             String?       
-  firstName         String?
-  lastName          String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  transactions      Transaction[] // This field represents the one-to-many relationship
+  id             String           @id @default(uuid())
+  clerkUserId    String           @unique
+  email          String?
+  firstName      String?
+  lastName       String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  transactions   Transaction[] // This field represents the one-to-many relationship
+  goalHistories  GoalHistory[] // This field represents the one-to-many relationship
+  BalanceHistory BalanceHistory[] // This field represents the one-to-many relationship
+  InsightHistory InsightHistory[] // This field represents the one-to-many relationship
 }
 
 model Transaction {
-  id                String     @id @default(uuid())
-  title             String     @unique
-  amount            Float      @default(0)
-  transactionDate   DateTime   @default(now())
-  createdAt         DateTime   @default(now())
-  updatedAt         DateTime   @updatedAt
-  userId            String     // This is the foreign key that references the User model
-  user              User       @relation(fields: [userId], references: [clerkUserId]) // This sets up the relationship in Prisma
+  id              String           @id @default(uuid())
+  title           String           @default("Untitled")
+  amount          Float            @default(0)
+  transactionDate DateTime         @default(now())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  userId          String // This is the foreign key that references the User model
+  user            User?             @relation(fields: [userId], references: [clerkUserId])
+  insightHistory  InsightHistory[] // This field represents the one-to-many relationship
+}
+
+model GoalHistory {
+  id             String           @id @default(uuid())
+  goalName       String           @default("Untitled")
+  goalAmount     Float            @default(0)
+  goalDate       DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  userId         String // This is the foreign key that references the User model
+  user           User             @relation(fields: [userId], references: [clerkUserId])
+  insightHistory InsightHistory[] // This field represents the one-to-many relationship
+}
+
+model BalanceHistory {
+  id             String           @id @default(uuid())
+  balance        Float            @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  userId         String // This is the foreign key that references the User model
+  user           User             @relation(fields: [userId], references: [clerkUserId])
+  insightHistory InsightHistory[] // This field represents the one-to-many relationship
+}
+
+model InsightHistory {
+  id                      String                @id @default(uuid())
+  insight                 String
+  balanceId               String // This is the foreign key that references the BalanceHistory model
+  balance                 BalanceHistory        @relation(fields: [balanceId], references: [id])
+  goalId                  String // This is the foreign key that references the GoalHistory model
+  goal                    GoalHistory           @relation(fields: [goalId], references: [id])
+  expenseId               String // This is the foreign key that references the Transaction model
+  expense                 Transaction           @relation(fields: [expenseId], references: [id])
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  userId                  String // This is the foreign key that references the User model
+  user                    User                  @relation(fields: [userId], references: [clerkUserId])
+  recommendationHistoryId String                @unique // This is the foreign key that references the RecommendationHistory model
+  recommendationHistory   RecommendationHistory @relation(fields: [recommendationHistoryId], references: [id])
+}
+
+model RecommendationHistory {
+  id             String          @id @default(uuid())
+  recommendation String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  insightHistory InsightHistory? // This is the back reference to the InsightHistory model
 }
