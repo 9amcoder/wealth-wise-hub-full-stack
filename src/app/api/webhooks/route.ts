@@ -73,6 +73,23 @@ export async function POST(req: Request) {
     }
   }
 
+  if (eventType === "user.deleted"){
+    try {
+      if (id) {
+        const user = await prisma.user.delete({
+          where: {
+            clerkUserId: id,
+          },
+        });
+      } else {
+        console.error("No user ID found in the webhook");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  
+  }
+
   console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
   console.log("Webhook body:", body);
 
