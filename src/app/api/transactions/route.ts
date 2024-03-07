@@ -3,6 +3,13 @@ import { z } from "zod";
 
 const prisma = new PrismaClient();
 
+const transactionSchema = z.object({
+  userId: z.string(),
+  title: z.string(),
+  transactionDate: z.string().optional(),
+  amount: z.number(),
+});
+
 export async function GET() {
   try {
     const transactions = await prisma.transaction.findMany();
@@ -12,13 +19,6 @@ export async function GET() {
     return Response.error();
   }
 }
-
-const transactionSchema = z.object({
-  userId: z.string(),
-  title: z.string(),
-  transactionDate: z.string().optional(),
-  amount: z.number(),
-});
 
 export async function POST(req: Request, res: Response) {
   try {
@@ -55,6 +55,40 @@ export async function POST(req: Request, res: Response) {
     const transaction = await prisma.transaction.create({
       data: {
         userId: payload.userId,
+        title: payload.title,
+        transactionDate: payload.transactionDate,
+        amount: payload.amount,
+      },
+    });
+    return Response.json(transaction);
+  } catch (error) {
+    console.error(error);
+    return Response.error();
+  }
+}
+
+// update 
+export async function PUT(req: Request, res: Response) {
+  try {
+    const payload = await req.json();
+    const response = transactionSchema.safeParse(payload);
+
+    if (!response.success) {
+      const [errors] = response.error.errors;
+      return Response.json(
+        {
+          message: "Invalid request",
+          error: errors.message,
+        },
+        { status: 400 }
+      );
+    }
+
+    const transaction = await prisma.transaction.update({
+      where: {
+        id: payload.id,
+      },
+      data: {
         title: payload.title,
         transactionDate: payload.transactionDate,
         amount: payload.amount,
