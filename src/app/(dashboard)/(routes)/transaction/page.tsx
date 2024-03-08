@@ -68,13 +68,6 @@ const TransactionPage: React.FC = () => {
     return <div> Error: {transactionError}</div>;
   }
 
-  if (
-    !transactionsByUserId ||
-    (Array.isArray(transactionsByUserId) && transactionsByUserId.length === 0)
-  ) {
-    return <p>No transaction data</p>;
-  }
-
   return (
     <>
       <div className="mx-2 my-2">
@@ -98,32 +91,42 @@ const TransactionPage: React.FC = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactionsByUserId.map((transaction) => (
-            <TableRow key={transaction.id}>
-              <TableCell className="font-medium">{transaction.title}</TableCell>
-              <TableCell>{transaction.amount}</TableCell>
-              <TableCell>
-                {new Date(transaction.transactionDate).toLocaleDateString() +
-                  " " +
-                  new Date(transaction.transactionDate).toLocaleTimeString()}
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="outline"
-                  // onClick={() => router.push(`/${locale}/adduser`)}
-                >
-                  Edit
-                </Button>
-                <Button
-                  className="ml-5"
-                  variant="destructive"
-                  onClick={handleRemove.bind(this, transaction.id)}
-                >
-                  Delete
-                </Button>
-              </TableCell>
+          {!transactionsByUserId ||
+          (Array.isArray(transactionsByUserId) &&
+            transactionsByUserId.length === 0) ? (
+            <TableRow>
+              <TableCell colSpan={4}>No data</TableCell>
             </TableRow>
-          ))}
+          ) : (
+            transactionsByUserId.map((transaction) => (
+              <TableRow key={transaction.id}>
+                <TableCell className="font-medium">
+                  {transaction.title}
+                </TableCell>
+                <TableCell>{transaction.amount}</TableCell>
+                <TableCell>
+                  {new Date(transaction.transactionDate).toLocaleDateString() +
+                    " " +
+                    new Date(transaction.transactionDate).toLocaleTimeString()}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="outline"
+                    // onClick={() => router.push(`/${locale}/adduser`)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    className="ml-5"
+                    variant="destructive"
+                    onClick={handleRemove.bind(this, transaction.id)}
+                  >
+                    Delete
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </>
