@@ -73,19 +73,21 @@ const InitialPage: React.FC<InitialPageProps> = () => {
 
     // fetch data from the server (see app/api folder)
     useEffect(() => {
-        const fetchData = async () => {
-            if (user?.id && isLoaded) {
+        const loadGoalandBalance = async () => {
+            if (isLoaded) {
                 try {
                     //TODO: Temporary hardcoded user id for testing
-                    const goal_response = await fetch(`/api/goals/user_2cshbGwAojpabypE6rZc0vRFWt7`);
-                    const goal = await goal_response.json();
-
                     const balance_response = await fetch(`/api/balance/user_2cshbGwAojpabypE6rZc0vRFWt7`);
                     const balance = await balance_response.json();
+                    console.log(balance)
 
-                    setGoal(goal);
+                    const goal_response = await fetch(`/api/goals/user_2cshbGwAojpabypE6rZc0vRFWt7`);
+                    const goal = await goal_response.json();
+                    console.log(goal)
+
                     setBalance(balance);
-
+                    setGoal(goal);
+                    
                     setLoading(false);
                 } catch (error) {
                     console.error('Error:', error);
@@ -93,10 +95,8 @@ const InitialPage: React.FC<InitialPageProps> = () => {
                 }
             }
         };
-    
-        const delay = 2000; // Delay in milliseconds
-        setTimeout(fetchData, delay);
-    }, [user?.id, isLoaded]);
+        loadGoalandBalance();
+      }, [user?.id, isLoaded]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         console.log(user?.id)
@@ -136,6 +136,7 @@ const InitialPage: React.FC<InitialPageProps> = () => {
     }
 
     if (isLoading) {
+        return <div>Loading...</div>
     } else {
         if(goal == null || balance == null) {
             return(

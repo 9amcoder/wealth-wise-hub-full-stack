@@ -7,7 +7,7 @@ export async function GET(
     { params } : { params: { userId: string } }
 ){
     try {
-        const balance = await prisma.balanceHistory.findFirst({
+        const balance = await prisma.balanceHistory.findMany({
             where: {
                 userId: params.userId
             }

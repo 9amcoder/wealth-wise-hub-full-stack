@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 const goalSchema = z.object({
     goalName: z.string(),
     goalAmount: z.number(),
-    goalDate: z.date(),
+    goalDate: z.string().datetime(),
     userId: z.string()
   });
 
@@ -35,6 +35,7 @@ export async function POST(req: Request, res: Response) {
 
         if (!response.success) {
             const [errors] = response.error.errors;
+            console.log(errors)
             return Response.json(
               {
                 message: "Invalid request",
@@ -51,7 +52,8 @@ export async function POST(req: Request, res: Response) {
                 goalDate: payload.goalDate,
                 userId: payload.userId
             }
-        })
+        }).catch((err) => console.log(err));
+
         return Response.json(goal);
     } catch (error) {
         console.error(error);

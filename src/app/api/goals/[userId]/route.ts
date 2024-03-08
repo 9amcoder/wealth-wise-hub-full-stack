@@ -7,7 +7,7 @@ export async function GET(
     { params } : { params: { userId: string } }
 ){
     try {
-        const goal = await prisma.goalHistory.findFirst({
+        const goal = await prisma.goalHistory.findMany({
             where: {
                 userId: params.userId
             }
