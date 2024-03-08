@@ -3,41 +3,22 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import Image from "next/image";
-import { previewColumns } from "@/components/dashboard/transaction/preview-columns";
-import { transactionColumns } from "@/components/dashboard/transaction/transaction-columns";
-import { PreviewDataTable } from "@/components/dashboard/transaction/preview-data-table";
-import { TransactionDataTable } from "@/components/dashboard/transaction/transaction-data-table";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { DEFAULT_SEGMENT_KEY } from "next/dist/shared/lib/segment";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { useUser } from "@clerk/nextjs";
 import useTransactionStore from "@/store/transactionStore";
+import LoadingComponent from "@/components/dashboard/Loading";
+import { useRouter } from "next/navigation";
 
-interface TransactionPageProps {}
-
-const TransactionPage: React.FC<TransactionPageProps> = () => {
+const TransactionPage: React.FC = () => {
   const { user, isLoaded } = useUser();
+  const router = useRouter();
 
   const {
     loading,
@@ -45,24 +26,24 @@ const TransactionPage: React.FC<TransactionPageProps> = () => {
     transactionsByUserId,
     getTransactionById,
     getTransactionByUserId,
-    addTransaction,
-    updateTransaction,
     deleteTransaction,
   } = useTransactionStore();
 
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
-
   const user_id = user?.id;
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleRefresh = () => {
+    try {
+      getTransactionByUserId(user_id || "");
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSelectedFile(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  const handleRemove = (id: string) => {
+    try {
+      deleteTransaction(id);
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -79,15 +60,8 @@ const TransactionPage: React.FC<TransactionPageProps> = () => {
     loadUserById();
   }, [getTransactionByUserId, user_id, isLoaded]);
 
-  let formattedData = transactionsByUserId.map((transaction) => {
-    return {
-      ...transaction,
-      transactionDate: new Date(transaction.transactionDate).toISOString(),
-    };
-  });
-
   if (loading) {
-    return <div> loading...</div>;
+    return <LoadingComponent />;
   }
 
   if (transactionError) {
@@ -102,151 +76,57 @@ const TransactionPage: React.FC<TransactionPageProps> = () => {
   }
 
   return (
-    <div className="grid gap-3 m-[2]">
-      <div className="grid grid-flow-row-dense grid-cols-3 gap-1">
-        <div className="col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-[#282458]">Upload Invoice</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form>
-                <div className="grid w-full items-center gap-4">
-                  <div className="flex flex-col space-y-1.5">
-                    <Input
-                      id="picture"
-                      type="file"
-                      onChange={handleFileChange}
-                    />
-                    {selectedFile && (
-                      <div className="mt-2">
-                        <Image
-                          src={selectedFile}
-                          alt="Preview"
-                          className="rounded-md"
-                          height={0}
-                          width={0}
-                          style={{ width: "auto", height: "255px" }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
+    <>
+      <div className="mx-2 my-2">
+        <Button
+          variant="default"
+          onClick={() => router.push(`/addtransaction`)}
+        >
+          Add New +
+        </Button>
+        <Button className="ml-5" variant="secondary" onClick={handleRefresh}>
+          Refresh
+        </Button>
+      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead> Title</TableHead>
+            <TableHead> Amount </TableHead>
+            <TableHead> Date and Time </TableHead>
+            <TableHead>Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {transactionsByUserId.map((transaction) => (
+            <TableRow key={transaction.id}>
+              <TableCell className="font-medium">{transaction.title}</TableCell>
+              <TableCell>{transaction.amount}</TableCell>
+              <TableCell>
+                {new Date(transaction.transactionDate).toLocaleDateString() +
+                  " " +
+                  new Date(transaction.transactionDate).toLocaleTimeString()}
+              </TableCell>
+              <TableCell>
                 <Button
-                  className="text-[#282458] mt-2"
                   variant="outline"
-                  type="button"
-                  disabled={!selectedFile}
+                  // onClick={() => router.push(`/${locale}/adduser`)}
                 >
-                  Extract
+                  Edit
                 </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="col-span-2">
-          <Card className="h-[447px]">
-            <CardHeader>
-              <div className="grid grid-cols-2">
-                <CardTitle className="text-[#282458] col-span-1">
-                  Preview
-                </CardTitle>
-                <div className="col-span-1 top-0 right-0">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div className="right-0 top-0">
-                        <Button
-                          className="text-[#282458]"
-                          variant="outline"
-                          type="button"
-                        >
-                          Add transaction
-                        </Button>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle className="text-[#282458]">
-                          Add new transaction
-                        </DialogTitle>
-                        <DialogDescription>
-                          Enter information for new transaction here. Click save
-                          when you are done.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label
-                            htmlFor="transactionDate"
-                            className="text-right text-[#282458]"
-                          >
-                            Date Time
-                          </Label>
-                          <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <DateTimePicker
-                              className="w-full h-full bg-transparent"
-                              views={[
-                                "year",
-                                "day",
-                                "hours",
-                                "minutes",
-                                "seconds",
-                              ]}
-                            />
-                          </LocalizationProvider>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label
-                            htmlFor="title"
-                            className="text-right text-[#282458]"
-                          >
-                            Item
-                          </Label>
-                          <Input id="title" value="" className="col-span-3" />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Label
-                            htmlFor="amount"
-                            className="text-right text-[#282458]"
-                          >
-                            Amount
-                          </Label>
-                          <Input id="amount" value="" className="col-span-3" />
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <Button
-                          className="text-[#282458] bg-[#F3F3FC] hover:bg-[#E5E5FF]"
-                          type="submit"
-                        >
-                          Save
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <PreviewDataTable columns={previewColumns} data={formattedData} />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-      <div>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-[#282458]">Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TransactionDataTable
-              columns={transactionColumns}
-              data={formattedData}
-            />
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+                <Button
+                  className="ml-5"
+                  variant="destructive"
+                  onClick={handleRemove.bind(this, transaction.id)}
+                >
+                  Delete
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </>
   );
 };
 
