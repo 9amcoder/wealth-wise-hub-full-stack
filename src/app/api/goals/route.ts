@@ -46,6 +46,7 @@ export async function POST(req: Request, res: Response) {
 
         const goal = await prisma.goalHistory.create({
             data: {
+                goalName: payload.goalName,
                 goalAmount: payload.goalAmount,
                 goalDate: payload.goalDate,
                 userId: payload.userId

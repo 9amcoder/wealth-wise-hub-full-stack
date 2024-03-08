@@ -53,7 +53,8 @@ const InitialPage: React.FC<InitialPageProps> = () => {
         balance: z.coerce.number().min(0, {
           message: "Balance must be a postitive number",
         }),
-        goal: z.coerce.number().min(0.1, {
+        goal_title: z.string(),
+        target_amount: z.coerce.number().min(0.1, {
             message: "Goal must be greater than 0"
         }),
         target_date: z.coerce.date().min(new Date(), {
@@ -65,7 +66,8 @@ const InitialPage: React.FC<InitialPageProps> = () => {
         resolver: zodResolver(formSchema),
         defaultValues: {
             balance: 0.0,
-            goal: 0.0
+            target_amount: 0.0,
+            goal_title: "New Goal"
         },
     })
 
@@ -118,7 +120,8 @@ const InitialPage: React.FC<InitialPageProps> = () => {
                 },
                 body: JSON.stringify({
                     userId: user?.id, 
-                    goalAmount: values.goal, 
+                    goalName: values.goal_title,
+                    goalAmount: values.target_amount, 
                     goalDate: values.target_date}),
             })
         ];
@@ -156,9 +159,20 @@ const InitialPage: React.FC<InitialPageProps> = () => {
                                         )}
                                     />
                                     <br/>
-                                    <FormField control={form.control} name="goal" render={({ field }) => (
+                                    <FormField control={form.control} name="goal_title" render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel className="text-[#282458]">Goal</FormLabel>
+                                                <FormLabel className="text-[#282458]">Goal Title</FormLabel>
+                                                <FormControl>
+                                                    <Input type="string" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <br/>
+                                    <FormField control={form.control} name="target_amount" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-[#282458]">Target Amount</FormLabel>
                                                 <FormControl>
                                                     <Input type="number" {...field} />
                                                 </FormControl>
