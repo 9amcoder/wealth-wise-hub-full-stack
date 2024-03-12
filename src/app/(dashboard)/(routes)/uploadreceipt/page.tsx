@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, useState } from "react";
 import Image from "next/image";
+import { post } from "@/config/axiosConfig";
+import Tesseract from "tesseract.js";
 
 const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
-
-  const [data, setData] = useState([]);
-  const [isLoading, setLoading] = useState(true);
+  const [selectedFile, setSelectedFile] = useState<any>();
+  const [extractedText, setExtractedText] = useState("");
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -22,6 +22,16 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+  const handleOcr = () => {
+    if (!selectedFile) return;
+    Tesseract.recognize(
+      selectedFile,
+      "eng",
+      { logger: (m: any) => console.log(m) } // Optional logger
+    ).then(({ data: { text } }) => {
+      setExtractedText(text);
+    });
   };
 
   return (
@@ -59,9 +69,16 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
                   className="text-[#282458] mt-2"
                   variant="outline"
                   type="button"
-                  disabled={!selectedFile}>
+                  disabled={!selectedFile}
+                  onClick={handleOcr}>
                   Extract
                 </Button>
+                {extractedText && (
+                  <div>
+                    <h3>Extracted Text:</h3>
+                    <p>{extractedText}</p>
+                  </div>
+                )}
               </form>
             </CardContent>
           </Card>
