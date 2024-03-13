@@ -98,6 +98,8 @@ const InitialPage: React.FC<InitialPageProps> = () => {
         loadGoalandBalance();
       }, [user?.id, isLoaded]);
 
+    const label =  "Let's set your current balance and future goal"
+
     async function onSubmit(values: z.infer<typeof formSchema>) {
         console.log(user?.id)
         console.log(values)
@@ -145,7 +147,7 @@ const InitialPage: React.FC<InitialPageProps> = () => {
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                             <Card className="w-[600px]">
                                 <CardHeader>
-                                    <CardTitle className="text-[#282458]">Let's set your current balance and future goal</CardTitle>
+                                    <CardTitle className="text-[#282458]">{label}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
 

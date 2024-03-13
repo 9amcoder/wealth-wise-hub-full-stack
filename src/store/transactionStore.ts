@@ -68,7 +68,7 @@ const useTransactionStore = create<TransactionStore>((set) => ({
     set({ transactionError: null, loading: true });
     try {
       const response = await post("/transactions", transaction);
-      set({ transactions: [...response.data, transaction] });
+      set({ transactions: response.data });
     } catch (transactionError) {
       const errorMessage = handleApiError(transactionError as AxiosError);
       set({ transactionError: errorMessage });
@@ -97,9 +97,11 @@ const useTransactionStore = create<TransactionStore>((set) => ({
   deleteTransaction: async (id) => {
     set({ transactionError: null, loading: true });
     try {
-      await remove(`/transactions/${id}`);
+      await remove(`/transaction/${id}`);
       set((state) => ({
-        transactions: state.transactions.filter((t) => t.id !== id),
+        transactionsByUserId: state.transactionsByUserId.filter(
+          (transaction) => transaction.id !== id
+        ),
       }));
     } catch (transactionError) {
       const errorMessage = handleApiError(transactionError as AxiosError);
