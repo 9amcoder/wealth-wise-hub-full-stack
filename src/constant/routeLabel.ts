@@ -16,7 +16,7 @@ export const ROUTES = [
     {
       label: "Analytics",
       icon: LayoutDashboard,
-      href: "/analytic",
+      href: "/analytics",
       color: "text-pink-700",
     },
     {

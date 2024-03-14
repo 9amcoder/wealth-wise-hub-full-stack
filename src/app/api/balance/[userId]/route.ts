@@ -18,3 +18,20 @@ export async function GET(
         return Response.error();
     }
 }
+
+export async function DELETE(
+    request: Request,
+    { params } : { params: { userId: string } }
+){
+    try {
+        const balance = await prisma.balanceHistory.deleteMany({
+            where: {
+                userId: params.userId
+            }
+        });
+        return Response.json(balance);
+    } catch (error) {
+        console.error(error);
+        return Response.error();
+    }
+}

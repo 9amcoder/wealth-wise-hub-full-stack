@@ -36,6 +36,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import LoadingComponent from "@/components/dashboard/Loading";
 
 interface InitialPageProps {}
 
@@ -71,17 +72,20 @@ const InitialPage: React.FC<InitialPageProps> = () => {
         },
     })
 
+    const label =  "Let's set your current balance and future goal"
+
     // fetch data from the server (see app/api folder)
     useEffect(() => {
         const loadGoalandBalance = async () => {
             if (isLoaded) {
                 try {
                     //TODO: Temporary hardcoded user id for testing
-                    const balance_response = await fetch(`/api/balance/user_2cshbGwAojpabypE6rZc0vRFWt7`);
+                    const balance_response = await fetch(`/api/balance/${user?.id}`);
                     const balance = await balance_response.json();
+                    console.log("User id: " + user?.id)
                     console.log(balance)
 
-                    const goal_response = await fetch(`/api/goals/user_2cshbGwAojpabypE6rZc0vRFWt7`);
+                    const goal_response = await fetch(`/api/goals/${user?.id}`);
                     const goal = await goal_response.json();
                     console.log(goal)
 
@@ -98,49 +102,10 @@ const InitialPage: React.FC<InitialPageProps> = () => {
         loadGoalandBalance();
       }, [user?.id, isLoaded]);
 
-    const label =  "Let's set your current balance and future goal"
-
-    async function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(user?.id)
-        console.log(values)
-
-        let results = [
-            await fetch(`/api/balance/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    userId: user?.id, 
-                    balance: values.balance
-                }),
-            }), 
-            await fetch(`/api/goals/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    userId: user?.id, 
-                    goalName: values.goal_title,
-                    goalAmount: values.target_amount, 
-                    goalDate: values.target_date}),
-            })
-        ];
-
-        console.log(results);
-
-        if(results[0].status == 200 && results[1].status == 200) {
-            router.push('/dashboard');
-        } else {
-            
-        }
-    }
-
-    if (isLoading) {
-        return <div>Loading...</div>
+      if (isLoading) {
+        return <LoadingComponent/>
     } else {
-        if(goal == null || balance == null) {
+        if(goal.length <= 0 || balance.length <= 0) {
             return(
                 <div className="grid h-screen place-items-center">
                     <Form {...form}>
@@ -231,6 +196,43 @@ const InitialPage: React.FC<InitialPageProps> = () => {
             )
         }
         router.push('/dashboard');
+    }
+
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        console.log(user?.id)
+        console.log(values)
+
+        let results = [
+            await fetch(`/api/balance/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    userId: user?.id, 
+                    balance: values.balance
+                }),
+            }), 
+            await fetch(`/api/goals/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    userId: user?.id, 
+                    goalName: values.goal_title,
+                    goalAmount: values.target_amount, 
+                    goalDate: values.target_date}),
+            })
+        ];
+
+        console.log(results);
+
+        if(results[0].status == 200 && results[1].status == 200) {
+            router.push('/dashboard');
+        } else {
+            
+        }
     }
 
     if (error) {
