@@ -76,21 +76,15 @@ const GoalUpdateForm: React.FC<GoalUpdateFormProps> = () => {
     }
 
     return (
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <Dialog>
-                    <DialogTrigger asChild>
-                        <Button variant="outline">Edit</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                            <DialogTitle>Edit goal</DialogTitle>
-                            <DialogDescription>
-                                Make changes to your goal here. Click save when you're done.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="grid items-center gap-4">
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button variant="outline" type="button">Edit</Button>
+            </DialogTrigger>
+            <DialogContent>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                        <Card className="w-[460px] border-hidden">
+                            <CardContent>
                                 <FormField control={form.control} name="target_amount" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-[#282458]">Target Amount</FormLabel>
@@ -99,9 +93,8 @@ const GoalUpdateForm: React.FC<GoalUpdateFormProps> = () => {
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
-                                )} />
-                            </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
+                                )}/>
+                                <br />
                                 <FormField control={form.control} name="target_date" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-[#282458]">Target Date</FormLabel>
@@ -111,7 +104,7 @@ const GoalUpdateForm: React.FC<GoalUpdateFormProps> = () => {
                                                     <Button
                                                         variant={"outline"}
                                                         className={cn(
-                                                            "w-[375px] pl-3 text-left font-normal",
+                                                            "w-[410px] pl-3 text-left font-normal",
                                                             !field.value && "text-muted-foreground"
                                                         )}
                                                     >
@@ -136,39 +129,38 @@ const GoalUpdateForm: React.FC<GoalUpdateFormProps> = () => {
                                         </Popover>
                                         <FormMessage />
                                     </FormItem>
-                                )} />
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button className="text-[#282458]" variant="outline" type="submit">Save changes</Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-            </form>
-        </Form>
+                                )}/>
+                            </CardContent>
+                            <CardFooter>
+                                <Button className="text-[#282458]" variant="outline" type="submit">Save changes</Button>
+                            </CardFooter>
+                        </Card>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
     );
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         console.log(user?.id)
         console.log(values)
 
-        let results = [
-            await fetch(`/api/goals/`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    userId: user?.id,
-                    goalAmount: values.target_amount,
-                    goalDate: values.target_date
-                }),
-            })
-        ];
+        let result = await fetch(`/api/goals/`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                userId: user?.id,
+                goalAmount: values.target_amount,
+                goalDate: values.target_date
+            }),
+        })
 
-        console.log(results);
+        console.log(result);
 
-        if (results[0].status == 200 && results[1].status == 200) {
+        if (result.status == 200) {
+            console.log(result.status);
             router.push('/analytics');
         } else {
             return <div> Error: {error}</div>
