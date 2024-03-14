@@ -2,17 +2,16 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
 import { ChangeEvent, useState } from "react";
 import Image from "next/image";
 import { post } from "@/config/axiosConfig";
-import Tesseract from "tesseract.js";
+// import Tesseract from "tesseract.js";
 
 const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
   const [selectedFile, setSelectedFile] = useState<any>();
   const [extractedText, setExtractedText] = useState("");
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
     if (file) {
@@ -21,18 +20,37 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
         setSelectedFile(reader.result as string);
       };
       reader.readAsDataURL(file);
+      console.log(reader);
     }
   };
-  const handleOcr = () => {
-    if (!selectedFile) return;
-    Tesseract.recognize(
-      selectedFile,
-      "eng",
-      { logger: (m: any) => console.log(m) } // Optional logger
-    ).then(({ data: { text } }) => {
-      setExtractedText(text);
-    });
+
+  const handleSubmit = async (e: any) => {
+    if (selectedFile) var base64 = selectedFile.split("base64,")[1];
+    console.log(base64);
+
+    const response = await post(
+      "https://wealthwise-receipts.cognitiveservices.azure.com/formrecognizer/documentModels/prebuilt-receipt:analyze?api-version=2023-07-31",
+      {
+        body: { base64Source: base64 },
+        headers: {
+          "Ocp-Apim-Subscription-Key": "bb74a5c5575744f38cfca27435cf5738",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("Document analysis response:", response);
   };
+  // const handleOcr = () => {
+  //   if (!selectedFile) return;
+  //   Tesseract.recognize(
+  //     selectedFile,
+  //     "eng",
+  //     { logger: (m: any) => console.log(m) } // Optional logger
+  //   ).then(({ data: { text } }) => {
+  //     setExtractedText(text);
+  //   });
+  // };
 
   return (
     <>
@@ -70,7 +88,7 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
                   variant="outline"
                   type="button"
                   disabled={!selectedFile}
-                  onClick={handleOcr}>
+                  onClick={handleSubmit}>
                   Extract
                 </Button>
                 {extractedText && (
