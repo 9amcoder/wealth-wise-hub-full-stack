@@ -40,7 +40,6 @@ model Transaction {
 
 model GoalHistory {
   id             String           @id @default(uuid())
-  goalName       String           @default("Untitled")
   goalAmount     Float            @default(0)
   goalDate       DateTime?
   createdAt      DateTime         @default(now())

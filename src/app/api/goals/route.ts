@@ -4,7 +4,6 @@ import { z } from "zod";
 const prisma = new PrismaClient();
 
 const goalSchema = z.object({
-    goalName: z.string(),
     goalAmount: z.number(),
     goalDate: z.string().datetime(),
     userId: z.string()
@@ -64,7 +63,6 @@ export async function POST(req: Request, res: Response) {
 
         const goal = await prisma.goalHistory.create({
             data: {
-                goalName: payload.goalName,
                 goalAmount: payload.goalAmount,
                 goalDate: payload.goalDate,
                 userId: payload.userId
@@ -78,7 +76,7 @@ export async function POST(req: Request, res: Response) {
     }
 }
 
-export async function UPDATE(req: Request, res: Response) {
+export async function PUT(req: Request, res: Response) {
     try {
         const payload = await req.json();
 
@@ -134,7 +132,6 @@ export async function UPDATE(req: Request, res: Response) {
                 userId: payload.userId
             },
             data: {
-                goalName: payload.goalName,
                 goalAmount: payload.goalAmount,
                 goalDate: payload.goalDate,
                 updatedAt: new Date().toISOString()
