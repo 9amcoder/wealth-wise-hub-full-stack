@@ -9,9 +9,6 @@ import {
     CardTitle,
     CardFooter
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Wallet2, CircleDollarSign, Target } from "lucide-react";
-import LineChartComponent from "@/components/ui/chart";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from 'next/navigation';
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -20,11 +17,9 @@ import { z } from "zod"
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
     DialogTrigger,
-    DialogFooter
+    DialogFooter,
+    DialogClose
 } from "@/components/ui/dialog"
 import {
     Form,
@@ -33,25 +28,30 @@ import {
     FormItem,
     FormLabel,
     FormMessage,
+    FormDescription
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import LoadingComponent from "@/components/dashboard/Loading";
-interface GoalUpdateFormProps { }
+import { useToast } from "@/components/ui/use-toast";
+import { GoalHistory } from "@prisma/client";
+import useGoalStore from "@/store/goalStore";
+import LoadingComponent from "@/components/dashboard/Loading"
 
-const GoalUpdateForm: React.FC<GoalUpdateFormProps> = () => {
-    const router = useRouter()
-    const [error, setError] = useState('')
+type GoalUpdateFormComponentProps = { goal: GoalHistory }
 
-    const { user, isLoaded } = useUser();
+export default function GoalUpdateFormComponent({ goal }: GoalUpdateFormComponentProps) {
+    const router = useRouter();
+    const { user } = useUser();
+    const { goalLoading, goalError, updateGoal } = useGoalStore();
+    const { toast } = useToast();
 
     const formSchema = z.object({
         target_amount: z.coerce.number().min(0.1, {
@@ -65,14 +65,17 @@ const GoalUpdateForm: React.FC<GoalUpdateFormProps> = () => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            target_amount: 0.0,
-            target_date: new Date()
+            target_amount: goal?.goalAmount,
+            target_date: goal?.goalDate
         },
     })
 
-    if (!isLoaded) {
-        console.log(user?.id);
-        return <div>Loading...</div>; // Handle loading state
+    if (goalLoading) {
+        return <LoadingComponent />;
+    }
+
+    if (goalError) {
+        return <div> Error: {goalError}</div>;
     }
 
     return (
@@ -84,16 +87,22 @@ const GoalUpdateForm: React.FC<GoalUpdateFormProps> = () => {
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                         <Card className="w-[460px] border-hidden">
+                            <CardHeader>
+                                <CardTitle>Edit goal</CardTitle>
+                                <CardDescription>Make changes to your goal here. Click save when you're done.</CardDescription>
+                            </CardHeader>
                             <CardContent>
                                 <FormField control={form.control} name="target_amount" render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-[#282458]">Target Amount</FormLabel>
                                         <FormControl>
-                                            <Input type="number" {...field} />
+                                            <Input type="number" {...field} onChange={(e) => {
+                                                field.onChange(parseFloat(e.target.value));
+                                            }} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
-                                )}/>
+                                )} />
                                 <br />
                                 <FormField control={form.control} name="target_date" render={({ field }) => (
                                     <FormItem>
@@ -129,12 +138,19 @@ const GoalUpdateForm: React.FC<GoalUpdateFormProps> = () => {
                                         </Popover>
                                         <FormMessage />
                                     </FormItem>
-                                )}/>
+                                )} />
                             </CardContent>
                             <CardFooter>
-                                <Button className="text-[#282458]" variant="outline" type="submit">Save changes</Button>
+                                <DialogClose>
+                                    <Button className="text-[#282458]" variant="outline" type="submit">Save changes</Button>
+                                </DialogClose>
                             </CardFooter>
                         </Card>
+                        {goalError && (
+                            <FormDescription className="text-red-600">
+                                Error: {goalError}
+                            </FormDescription>
+                        )}
                     </form>
                 </Form>
             </DialogContent>
@@ -142,30 +158,29 @@ const GoalUpdateForm: React.FC<GoalUpdateFormProps> = () => {
     );
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(user?.id)
-        console.log(values)
+        let goal = {
+            userId: user?.id,
+            goalAmount: values.target_amount,
+            goalDate: values.target_date
+        } as GoalHistory
 
-        let result = await fetch(`/api/goals/`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                userId: user?.id,
-                goalAmount: values.target_amount,
-                goalDate: values.target_date
-            }),
-        })
-
-        console.log(result);
-
-        if (result.status == 200) {
-            console.log(result.status);
-            router.push('/analytics');
-        } else {
-            return <div> Error: {error}</div>
+        try {
+            await updateGoal(goal)
+            if (!goalLoading) {
+                toast({
+                    title: "Goal was updated successfully",
+                    duration: 5000,
+                });
+                router.push(`/analytics`);
+            }
+        } catch (error) {
+            console.log("error", error);
+            toast({
+                title: "Failed to update goal",
+                description: "Error",
+                duration: 5000,
+                variant: "destructive"
+            });
         }
     }
 };
-
-export default GoalUpdateForm;
