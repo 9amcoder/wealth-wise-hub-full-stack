@@ -83,6 +83,33 @@ export async function PUT(req: Request, res: Response) {
         { status: 400 }
       );
     }
+    // if id is null or undefined then return 400
+    if (!payload.id) {
+      return Response.json(
+        {
+          message: "Invalid request",
+          error: "id is required",
+        },
+        { status: 400 }
+      );
+    }
+    
+    //if transaction not found from prisma then return 404
+    const findTransaction = await prisma.transaction.findUnique({
+      where: {
+        id: payload.id,
+      },
+    });
+
+    if (!findTransaction) {
+      return Response.json(
+        {
+          message: "Transaction not found",
+        },
+        { status: 404 }
+      );
+    }
+
 
     const transaction = await prisma.transaction.update({
       where: {

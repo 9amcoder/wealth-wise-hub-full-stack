@@ -9,7 +9,10 @@
     "lint": "next lint",
     "prisma:generate": "npx dotenv -e .env.local -- prisma generate",
     "migrate:dev": "npx dotenv -e .env.local -- prisma migrate dev",
-    "prisma:studio": "npx dotenv -e .env.local -- prisma studio"
+    "prisma:studio": "npx dotenv -e .env.local -- prisma studio",
+    "playwright:test": "npx playwright test",
+    "playwright:ui": "npx playwright test --ui",
+    "playwright:chromium": "npx playwright test --project=chromium"
   },
   "dependencies": {
     "@clerk/nextjs": "^4.29.6",
@@ -20,6 +23,7 @@
     "@mui/material": "^5.15.11",
     "@mui/x-date-pickers": "^6.19.5",
     "@nivo/line": "^0.84.0",
+    "@playwright/test": "^1.42.1",
     "@prisma/client": "^5.9.1",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
