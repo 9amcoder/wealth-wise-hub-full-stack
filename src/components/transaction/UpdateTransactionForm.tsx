@@ -22,17 +22,24 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Input } from "../ui/input";
 import LoadingComponent from "../dashboard/Loading";
+import { addTransactionSchema } from "./AddTransactionForm";
+import { format } from "date-fns";
+import { useEffect } from "react";
 
-export const addTransactionSchema = z.object({
-  id: z.string().optional(),
-  title: z.string().min(1, { message: "must be 1 character long" }).max(255),
-  amount: z.number().positive(),
-  transactionDate: z.union([z.date(), z.string()]),
-  userId: z.string(),
-});
+interface UpdateTransactionFormProps {
+  id: string;
+}
 
-const AddTransactionForm: React.FC = () => {
-  const { loading, transactionError, addTransaction } = useTransactionStore();
+const UpdateTransactionForm: React.FC<UpdateTransactionFormProps> = ({
+  id,
+}) => {
+  const {
+    loading,
+    transactionError,
+    updateTransaction,
+    getTransactionById,
+    transactionDataById,
+  } = useTransactionStore();
 
   const { user } = useUser();
 
@@ -43,18 +50,18 @@ const AddTransactionForm: React.FC = () => {
 
   const form = useForm<z.infer<typeof addTransactionSchema>>({
     resolver: zodResolver(addTransactionSchema),
-    defaultValues: {
-      title: "",
-      amount: 0,
-      transactionDate: new Date(),
-      userId: user_id || "",
+    defaultValues: transactionDataById ?? {
+      title: undefined,
+      amount: undefined,
+      transactionDate: undefined,
+      userId: undefined,
     },
   });
 
   const onSubmit = async (data: z.infer<typeof addTransactionSchema>) => {
-    const { title, amount, transactionDate, userId } = data;
-
+    const { title, amount, transactionDate, userId, id } = data;
     const newTransactionData = {
+      id,
       title,
       amount,
       transactionDate,
@@ -62,9 +69,9 @@ const AddTransactionForm: React.FC = () => {
     } as Transaction;
 
     try {
-      await addTransaction(newTransactionData);
+      await updateTransaction(newTransactionData);
       toast({
-        title: "Transaction added successfully",
+        title: "Transaction updated successfully",
         duration: 5000,
       });
       router.push(`/transaction`);
@@ -74,17 +81,30 @@ const AddTransactionForm: React.FC = () => {
         title: "Transaction failed to add",
         description: "error",
         duration: 5000,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
 
+  useEffect(() => {
+    const fetchTransactionById = async () => {
+      try {
+        await getTransactionById(id);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchTransactionById();
+  }, [id, getTransactionById]);
+
+  useEffect(() => {
+    if (transactionDataById) {
+      form.reset(transactionDataById);
+    }
+  }, [transactionDataById, form]);
+
   if (loading) {
     return <LoadingComponent />;
-  }
-
-  if (transactionError) {
-    return <div> Error: {transactionError}</div>;
   }
 
   return (
@@ -148,9 +168,13 @@ const AddTransactionForm: React.FC = () => {
                 <FormControl>
                   <DatePicker
                     selected={
-                      field.value instanceof Date
-                        ? field.value
-                        : new Date(field.value)
+                      typeof field.value === "string"
+                        ? isNaN(Date.parse(field.value))
+                          ? null
+                          : new Date(field.value)
+                        : field.value instanceof Date
+                        ? new Date(field.value.toISOString())
+                        : null
                     }
                     onChange={(date) => field.onChange(date)}
                     placeholderText={"Select date and time"}
@@ -169,7 +193,7 @@ const AddTransactionForm: React.FC = () => {
         />
 
         <Button type="submit" className="w-full">
-          Submit
+          Update
         </Button>
         {transactionError && (
           <FormDescription className="text-red-600">
@@ -181,4 +205,4 @@ const AddTransactionForm: React.FC = () => {
   );
 };
 
-export default AddTransactionForm;
+export default UpdateTransactionForm;
