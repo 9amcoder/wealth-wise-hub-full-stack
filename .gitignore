@@ -37,3 +37,6 @@ next-env.d.ts
 
 # jetbrain idea
 .idea
+
+# ignore test result file from palyright on test-results folder
+**/test-results/
