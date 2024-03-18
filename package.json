@@ -9,7 +9,10 @@
     "lint": "next lint",
     "prisma:generate": "npx dotenv -e .env.local -- prisma generate",
     "migrate:dev": "npx dotenv -e .env.local -- prisma migrate dev",
-    "prisma:studio": "npx dotenv -e .env.local -- prisma studio"
+    "prisma:studio": "npx dotenv -e .env.local -- prisma studio",
+    "playwright:test": "npx playwright test",
+    "playwright:ui": "npx playwright test --ui",
+    "playwright:chromium": "npx playwright test --project=chromium"
   },
   "dependencies": {
     "@clerk/nextjs": "^4.29.6",

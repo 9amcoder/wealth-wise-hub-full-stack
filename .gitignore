@@ -40,3 +40,30 @@ next-env.d.ts
 
 # ignore test result file from palyright on test-results folder
 **/test-results/
+
+# ignore test result file from jest on coverage folder
+**/playwright-report/
+
+/playwright-report/index.html
+
+/test-results/
+/tests/coverage-report
+
+/.dev_profile*
+.DS_Store
+*.swp
+*.pyc
+.vscode
+.idea
+yarn.lock
+
+/packages/playwright-core/src/generated
+/packages/playwright-ct-core/src/generated
+
+playwright-report
+test-results
+
+/tests/installation/output/
+/tests/installation/.registry.json
+.cache/
+.eslintcache
