@@ -12,5 +12,5 @@ test('click login button', async ({ page }) => {
   await page.goto('https://wealth-wise-hub-full-stack.vercel.app/');
   await page.click('text=Log In');
   await expect(page).toHaveTitle("WealthWise Hub");
-  await expect(page).toHaveURL('https://wealth-wise-hub-full-stack.vercel.app/sign-up');
+  await expect(page).toHaveURL('https://wealth-wise-hub-full-stack.vercel.app/sign-in');
 });
