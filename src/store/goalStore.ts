@@ -21,7 +21,6 @@ const useGoalStore = create<GoalStore>((set) => ({
     getGoalByUserId: async (userId) => {
         set({ goalError: null, goalLoading: true });
         try {
-            console.log("user id", userId);
             const response = await get(`/goals/${userId}`);
             set({ goalByUserId: response.data });
         } catch (goalError) {

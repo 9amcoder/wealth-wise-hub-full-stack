@@ -6,23 +6,22 @@ import { create } from "zustand";
 
 interface BalanceStore {
     balance: BalanceHistory | null
-    balanceByUserId: BalanceHistory | null;
+    originalBalanceByUserId: BalanceHistory | null;
     balanceLoading: boolean;
     balanceError: string | null;
-    getBalanceByUserId: (userId: string) => Promise<void>;
+    getOriginalBalanceByUserId: (userId: string) => Promise<void>;
 }
 
 const useBalanceStore = create<BalanceStore>((set) => ({
     balance: null,
-    balanceByUserId: null,
+    originalBalanceByUserId: null,
     balanceLoading: false,
     balanceError: null,
-    getBalanceByUserId: async (userId) => {
+    getOriginalBalanceByUserId: async (userId) => {
         set({ balanceError: null, balanceLoading: true });
         try {
-            console.log("user id", userId);
             const response = await get(`/balance/${userId}`);
-            set({ balanceByUserId: response.data });
+            set({ originalBalanceByUserId: response.data });
         } catch (balanceError) {
             const errorMessage = handleApiError(balanceError as AxiosError);
             set({ balanceError: errorMessage });

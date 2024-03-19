@@ -77,10 +77,8 @@ const InitialPage: React.FC<InitialPageProps> = () => {
         const loadGoalandBalance = async () => {
             if (isLoaded) {
                 try {
-                    //TODO: Temporary hardcoded user id for testing
                     const balance_response = await fetch(`/api/balance/${user?.id}`);
                     const balance = await balance_response.json();
-                    console.log("User id: " + user?.id)
                     console.log(balance)
 
                     const goal_response = await fetch(`/api/goals/${user?.id}`);
