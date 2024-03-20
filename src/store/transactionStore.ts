@@ -81,7 +81,7 @@ const useTransactionStore = create<TransactionStore>((set) => ({
     set({ transactionError: null, loading: true });
     try {
       const response = await put(
-        `/transactions/${transaction.id}`,
+        `/transactions`,
         transaction
       );
       const updatedTransactions = response.data;
