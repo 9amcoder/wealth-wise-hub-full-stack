@@ -7,11 +7,12 @@ import Image from "next/image";
 import { get, post } from "@/config/axiosConfig";
 import { Label } from "@/components/ui/label";
 import React from "react";
-// import Tesseract from "tesseract.js";
+import LoadingComponent from "@/components/dashboard/Loading";
 
 const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
   const [selectedFile, setSelectedFile] = useState<any>();
   const [extractedText, setExtractedText] = useState<any>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -30,6 +31,7 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
     if (selectedFile) var base64 = selectedFile.split("base64,")[1];
 
     const req = { base64Source: base64 };
+    console.log("process.env.AZURE_KEY", process.env.AZURE_KEY);
     const response = await post(
       "https://wealthwise-receipts.cognitiveservices.azure.com/formrecognizer/documentModels/prebuilt-receipt:analyze?api-version=2023-07-31",
       req,
@@ -52,21 +54,19 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
     const operationId = await initialanalysis();
     const result = await analyseResults(operationId);
 
     if (result) {
-      console.log("=== Receipt Information ===");
-
       const analyzedReceipts = result.analyzeResult.documents.map(
         (extractedReceipt: any, idx: any) => {
-          const s = { index: idx + 1 };
-
           console.log("receipt", extractedReceipt);
           setExtractedText(extractedReceipt);
         }
       );
     }
+    setLoading(false);
   };
 
   const analyseResults = async (operationId: any) => {
@@ -150,10 +150,13 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
                 </Button>
               </form>
             </CardContent>
-            <CardContent>
+          </Card>
+          <Card>
+            <div className="px-4">
+              {loading && <LoadingComponent />}
               {extractedText && (
                 <form>
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-6 py-4">
                     <Label>Merchant Name:</Label>
                     <Input
                       value={extractedText?.fields?.MerchantName?.valueString}
@@ -161,7 +164,7 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    {extractedText?.fields?.Items?.valueArray?.map(
+                    {/* {extractedText?.fields?.Items?.valueArray?.map(
                       (item: any, index: number) => (
                         <React.Fragment key={index}>
                           <Label>Item {index + 1} Description:</Label>
@@ -175,10 +178,14 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
                           />
                         </React.Fragment>
                       )
-                    )}
-                    <Label>Tax Details:</Label>
-                    <Input value={extractedText?.fields?.TotalTax?.content} />
-                    <Label>Total Price:</Label>
+                    )} */}
+                    <Label>Transaction Date:</Label>
+                    <Input
+                      value={extractedText?.fields?.TransactionDate?.content}
+                    />
+                    {/* <Label>Tax Details:</Label>
+                    <Input value={extractedText?.fields?.TotalTax?.content} /> */}
+                    <Label>Total Money Spent:</Label>
                     <Input value={extractedText?.fields?.Total?.content} />
                   </div>
                   <Button
@@ -189,7 +196,7 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
                   </Button>
                 </form>
               )}
-            </CardContent>
+            </div>
           </Card>
         </div>
       </div>
