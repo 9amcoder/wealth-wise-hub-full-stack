@@ -4,12 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ChangeEvent, useState } from "react";
 import Image from "next/image";
-import { post } from "@/config/axiosConfig";
+import { get, post } from "@/config/axiosConfig";
+import { Label } from "@/components/ui/label";
+import React from "react";
 // import Tesseract from "tesseract.js";
 
 const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
   const [selectedFile, setSelectedFile] = useState<any>();
-  const [extractedText, setExtractedText] = useState("");
+  const [extractedText, setExtractedText] = useState<any>("");
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -24,33 +26,88 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
     }
   };
 
-  const handleSubmit = async (e: any) => {
+  const initialanalysis = async () => {
     if (selectedFile) var base64 = selectedFile.split("base64,")[1];
-    console.log(base64);
 
+    const req = { base64Source: base64 };
     const response = await post(
       "https://wealthwise-receipts.cognitiveservices.azure.com/formrecognizer/documentModels/prebuilt-receipt:analyze?api-version=2023-07-31",
+      req,
       {
-        body: { base64Source: base64 },
         headers: {
-          "Ocp-Apim-Subscription-Key": "bb74a5c5575744f38cfca27435cf5738",
+          "Ocp-Apim-Subscription-Key": process.env.AZURE_KEY,
           "Content-Type": "application/json",
         },
       }
     );
 
-    console.log("Document analysis response:", response);
+    console.log(
+      "Document analysis response:",
+      response.headers["apim-request-id"]
+    );
+    const operationId = response.headers["apim-request-id"];
+
+    console.log("operationId", operationId);
+    return operationId;
   };
-  // const handleOcr = () => {
-  //   if (!selectedFile) return;
-  //   Tesseract.recognize(
-  //     selectedFile,
-  //     "eng",
-  //     { logger: (m: any) => console.log(m) } // Optional logger
-  //   ).then(({ data: { text } }) => {
-  //     setExtractedText(text);
-  //   });
-  // };
+
+  const handleSubmit = async () => {
+    const operationId = await initialanalysis();
+    const result = await analyseResults(operationId);
+
+    if (result) {
+      console.log("=== Receipt Information ===");
+
+      const analyzedReceipts = result.analyzeResult.documents.map(
+        (extractedReceipt: any, idx: any) => {
+          const s = { index: idx + 1 };
+
+          console.log("receipt", extractedReceipt);
+          setExtractedText(extractedReceipt);
+        }
+      );
+    }
+  };
+
+  const analyseResults = async (operationId: any) => {
+    const maxRetries = 5; // Maximum number of retries
+    let retries = 0;
+
+    const fetchResults: any = async () => {
+      try {
+        const response = await get(
+          `https://wealthwise-receipts.cognitiveservices.azure.com/formrecognizer/documentModels/prebuilt-receipt/analyzeResults/${operationId}?api-version=2023-07-31`,
+          {
+            headers: {
+              "Ocp-Apim-Subscription-Key": "process.env.AZURE_KEY",
+            },
+          }
+        );
+
+        const { data } = response;
+        console.log("Current status:", data.status);
+
+        if (data.status === "running" && retries < maxRetries) {
+          retries++;
+          console.log(
+            `Retrying after 5 seconds (Retry ${retries}/${maxRetries})`
+          );
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // Delay for 2 seconds before retrying
+          return fetchResults(); // Retry the request
+        } else if (data.status === "succeeded") {
+          console.log("Results:", data);
+          return data; // Return the final results
+        } else {
+          throw new Error("Unexpected status or max retries reached");
+        }
+      } catch (error) {
+        console.error("Error fetching results:", error);
+        throw error;
+      }
+    };
+
+    return fetchResults();
+  };
 
   return (
     <>
@@ -91,13 +148,47 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
                   onClick={handleSubmit}>
                   Extract
                 </Button>
-                {extractedText && (
-                  <div>
-                    <h3>Extracted Text:</h3>
-                    <p>{extractedText}</p>
-                  </div>
-                )}
               </form>
+            </CardContent>
+            <CardContent>
+              {extractedText && (
+                <form>
+                  <div className="grid grid-cols-2 gap-6">
+                    <Label>Merchant Name:</Label>
+                    <Input
+                      value={extractedText?.fields?.MerchantName?.valueString}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {extractedText?.fields?.Items?.valueArray?.map(
+                      (item: any, index: number) => (
+                        <React.Fragment key={index}>
+                          <Label>Item {index + 1} Description:</Label>
+
+                          <Input
+                            value={item?.valueObject?.Description?.valueString}
+                          />
+                          <Label>Item {index + 1} Price:</Label>
+                          <Input
+                            value={item?.valueObject?.TotalPrice?.content}
+                          />
+                        </React.Fragment>
+                      )
+                    )}
+                    <Label>Tax Details:</Label>
+                    <Input value={extractedText?.fields?.TotalTax?.content} />
+                    <Label>Total Price:</Label>
+                    <Input value={extractedText?.fields?.Total?.content} />
+                  </div>
+                  <Button
+                    className="text-[#282458] mt-2"
+                    variant="outline"
+                    type="button">
+                    Submit
+                  </Button>
+                </form>
+              )}
             </CardContent>
           </Card>
         </div>
