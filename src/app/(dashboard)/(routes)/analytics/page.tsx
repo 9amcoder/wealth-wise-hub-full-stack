@@ -19,7 +19,7 @@ import GoalUpdateForm from "@/components/dashboard/analytics/GoalUpdateForm";
 import useGoalStore from "@/store/goalStore";
 import useBalanceStore from "@/store/balanceStore";
 import useTransactionStore from "@/store/transactionStore";
-import { BalanceHistory } from "@prisma/client";
+import useExpenseStore from "@/store/expenseStore";
 
 interface AnalyticPageProps { }
 
@@ -48,6 +48,13 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   } = useBalanceStore();
 
   const {
+    expenseLoading,
+    expenseError,
+    expensesByUserId,
+    getExpensesByUserId
+  } = useExpenseStore();
+
+  const {
     loading,
     transactionError,
     transactionsByUserId,
@@ -62,33 +69,30 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
           await getTransactionByUserId(user?.id || "");
           await getGoalByUserId(user?.id || "");
           await getOriginalBalanceByUserId(user?.id || "");
+          await getExpensesByUserId(user?.id || "");
 
-          let original_balance = originalBalanceByUserId;
-
-          const expense_response = await fetch(`/api/expense/${user?.id}`);
-          const expense_object = await expense_response.json();
-
-          if (expense_object) {
-            let rawBalanceDate = new Date(original_balance?.createdAt);
+          if (originalBalanceByUserId && expensesByUserId) {
+            let rawBalanceDate = new Date(originalBalanceByUserId.createdAt);
             let balanceDate = rawBalanceDate.getMonth() + `-` + rawBalanceDate.getFullYear();
           
             let periods = [];
             let budget = [];
 
-            let expense_periods = expense_object.map(expense => expense.TransactionPeriod);
+            let expense_periods = expensesByUserId.map(expense => expense.TransactionPeriod);
 
-            let new_budget = original_balance?.balance;
+            let new_budget = originalBalanceByUserId.balance;
             budget.push(new_budget);
 
-            for (var i = 0; i < expense_object.length; i++) {
-              new_budget = new_budget - parseFloat(expense_object[i].TotalExpense);
+            for (var i = 0; i < expensesByUserId.length; i++) {
+              new_budget = new_budget - expensesByUserId[i].TotalExpense;
+
               if (balanceDate !== expense_periods[i]) {
                 budget.push(new_budget);
               }
             }
             
             periods.push(...expense_periods);
-            let expenses = expense_object.map(expense => expense.TotalExpense);
+            let expenses = expensesByUserId.map(expense => expense.TotalExpense);
             
             const chartData = {
               labels: periods,
@@ -115,7 +119,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
 
             const balance = budget[budget.length-1];
             setBalance(balance);
-            
+
             setChartData(chartData);
             setChartDataLoading(false);
           }
@@ -125,9 +129,9 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
       }
     };
     loadUserById();
-  }, [getTransactionByUserId, getGoalByUserId, getOriginalBalanceByUserId, user?.id, isLoaded]);
+  }, [getTransactionByUserId, getGoalByUserId, getOriginalBalanceByUserId, getExpensesByUserId, setBalance, setChartData, setChartDataLoading, user?.id, isLoaded]);
 
-  if (loading || goalLoading || balanceLoading || chartDataLoading) {
+  if (loading || goalLoading || balanceLoading || expenseLoading || chartDataLoading) {
     return <LoadingComponent />;
   }
 
