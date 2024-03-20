@@ -47,6 +47,14 @@ const TransactionPage: React.FC = () => {
     }
   };
 
+  const handleUpdate = (id: string) => {
+    try {
+      router.push(`/transaction/${id}`);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     const loadUserById = async () => {
       try {
@@ -112,7 +120,7 @@ const TransactionPage: React.FC = () => {
                 <TableCell>
                   <Button
                     variant="outline"
-                    // onClick={() => router.push(`/${locale}/adduser`)}
+                    onClick={handleUpdate.bind(this, transaction.id)}
                   >
                     Edit
                   </Button>
