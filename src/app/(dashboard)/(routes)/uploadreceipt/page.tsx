@@ -79,7 +79,7 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
           `https://wealthwise-receipts.cognitiveservices.azure.com/formrecognizer/documentModels/prebuilt-receipt/analyzeResults/${operationId}?api-version=2023-07-31`,
           {
             headers: {
-              "Ocp-Apim-Subscription-Key": "process.env.AZURE_KEY",
+              "Ocp-Apim-Subscription-Key": process.env.AZURE_KEY,
             },
           }
         );
