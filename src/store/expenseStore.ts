@@ -22,10 +22,11 @@ const useExpenseStore = create<ExpenseStore>((set) => ({
     expenseLoading: false,
     expenseError: null,
     getExpensesByUserId: async (userId) => {
-        set({ expenseError: null, expenseLoading: true });
         try {
+            console.log("Get expense");
             const response = await get(`/expense/${userId}`);
             set({ expensesByUserId: response.data });
+            set({ expenseError: null, expenseLoading: true });
         } catch (expenseError) {
             const errorMessage = handleApiError(expenseError as AxiosError);
             set({ expenseError: errorMessage });

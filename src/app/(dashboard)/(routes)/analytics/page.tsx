@@ -26,12 +26,11 @@ interface AnalyticPageProps { }
 const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   const { user, isLoaded } = useUser();
   const router = useRouter();
-  const [insights, setInsights] = useState([])
-  // const [bugdet, setBudgets] = useState([])
-  // const [expenses, setExpenses] = useState([])
-  const [balance, setBalance] = useState()
-  const [chartData, setChartData] = useState({})
-  const [chartDataLoading, setChartDataLoading]  = useState(true)
+  const [insights, setInsights] = useState(null);
+  const [balance, setBalance] = useState();
+  const [chartData, setChartData] = useState({});
+  const [chartDataLoading, setChartDataLoading] = useState(true);
+  const [insightLoading, setInsightLoading] = useState(true);
 
   const {
     goalLoading,
@@ -71,15 +70,20 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
           await getOriginalBalanceByUserId(user?.id || "");
           await getExpensesByUserId(user?.id || "");
 
+          console.log("Begin calculation");
+          console.log("original Balance: " + originalBalanceByUserId);
+          console.log("expenses: " + expensesByUserId);
           if (originalBalanceByUserId && expensesByUserId) {
             let rawBalanceDate = new Date(originalBalanceByUserId.createdAt);
             let balanceDate = rawBalanceDate.getMonth() + `-` + rawBalanceDate.getFullYear();
-          
+
+            console.log("Get expense periods");
             let periods = [];
             let budget = [];
 
             let expense_periods = expensesByUserId.map(expense => expense.TransactionPeriod);
 
+            console.log("Get new balance");
             let new_budget = originalBalanceByUserId.balance;
             budget.push(new_budget);
 
@@ -90,10 +94,11 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                 budget.push(new_budget);
               }
             }
-            
+
             periods.push(...expense_periods);
             let expenses = expensesByUserId.map(expense => expense.TotalExpense);
-            
+
+            console.log("Set up charts");
             const chartData = {
               labels: periods,
               datasets: [
@@ -117,11 +122,12 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
               ],
             };
 
-            const balance = budget[budget.length-1];
+            const balance = budget[budget.length - 1];
             setBalance(balance);
 
             setChartData(chartData);
             setChartDataLoading(false);
+            console.log("Begin End calculation");
           }
         }
       } catch (error) {
@@ -141,6 +147,11 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
 
   if (balanceError) {
     return <div> Error: {balanceError}</div>;
+  }
+
+  async function getInsights() {
+    setInsightLoading(false);
+    setInsights("Generated Insights");
   }
 
   return (
@@ -182,7 +193,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                 </div>
                 <div className="col-span-1 flex flex-row-reverse">
                   <div className="grid gap-4 py-4">
-                    <GoalUpdateForm goal={goalByUserId}/>
+                    <GoalUpdateForm goal={goalByUserId} />
                   </div>
                 </div>
               </div>
@@ -194,23 +205,26 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
         <CardHeader>
           <CardTitle>Insights</CardTitle>
         </CardHeader>
-        <div className="p-2 grid divide-x divide-gray-300">
+        <div className="p-2 grid grid-cols-2 divide-x divide-gray-300">
           <CardContent>
-            <div className="grid gap-4 items-center justify-center">
-              < Button className="text-[#282458] w-[100px]" variant="outline" type="button" onClick={() => { alert("Generating insights") }}>Start</Button>
+            <div className="col-span-1">
+              <LineChartComponent data={chartData} options={{ maintainAspectRatio: false }} />
+            </div>
+          </CardContent>
+          <CardContent>
+            <div className="col-span-1 ">
+              <div className="grid gap-4 items-center justify-center">
+                {
+                  (insightLoading) 
+                  ? < Button className="text-[#282458] w-[100px]" variant="outline" type="button" onClick={async () => { await getInsights() }}>More</Button> 
+                  : (!insights) 
+                    ? <LoadingComponent /> 
+                    : <div>{insights}</div>
+                }
+              </div>
             </div>
           </CardContent>
         </div>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Statistics</CardTitle>
-        </CardHeader>
-        <CardContent className="pb-4">
-          <div className="h-[450px]">
-            <LineChartComponent data={chartData} />
-          </div>
-        </CardContent>
       </Card>
     </div>
   );

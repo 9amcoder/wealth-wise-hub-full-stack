@@ -18,10 +18,11 @@ const useBalanceStore = create<BalanceStore>((set) => ({
     balanceLoading: false,
     balanceError: null,
     getOriginalBalanceByUserId: async (userId) => {
-        set({ balanceError: null, balanceLoading: true });
         try {
+            console.log("Get original balance");
             const response = await get(`/balance/${userId}`);
             set({ originalBalanceByUserId: response.data });
+            set({ balanceError: null, balanceLoading: true });
         } catch (balanceError) {
             const errorMessage = handleApiError(balanceError as AxiosError);
             set({ balanceError: errorMessage });

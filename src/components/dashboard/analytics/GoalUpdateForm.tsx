@@ -81,14 +81,14 @@ export default function GoalUpdateFormComponent({ goal }: GoalUpdateFormComponen
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="outline" type="button">Edit</Button>
+                <Button variant="outline" type="button">Update</Button>
             </DialogTrigger>
             <DialogContent>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                         <Card className="w-[460px] border-hidden">
                             <CardHeader>
-                                <CardTitle>Edit goal</CardTitle>
+                                <CardTitle>Update goal</CardTitle>
                                 <CardDescription>Make changes to your goal here. Click save when you're done.</CardDescription>
                             </CardHeader>
                             <CardContent>

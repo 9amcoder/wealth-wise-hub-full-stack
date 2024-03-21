@@ -19,10 +19,11 @@ const useGoalStore = create<GoalStore>((set) => ({
     goalLoading: false,
     goalError: null,
     getGoalByUserId: async (userId) => {
-        set({ goalError: null, goalLoading: true });
         try {
+            console.log("Get goal");
             const response = await get(`/goals/${userId}`);
             set({ goalByUserId: response.data });
+            set({ goalError: null, goalLoading: true });
         } catch (goalError) {
             const errorMessage = handleApiError(goalError as AxiosError);
             set({ goalError: errorMessage });
