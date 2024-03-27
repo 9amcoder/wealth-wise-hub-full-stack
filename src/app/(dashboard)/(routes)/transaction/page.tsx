@@ -94,6 +94,7 @@ const TransactionPage: React.FC = () => {
           <TableRow>
             <TableHead> Title</TableHead>
             <TableHead> Amount </TableHead>
+            <TableHead> Type </TableHead>
             <TableHead> Date and Time </TableHead>
             <TableHead>Action</TableHead>
           </TableRow>
@@ -111,7 +112,8 @@ const TransactionPage: React.FC = () => {
                 <TableCell className="font-medium">
                   {transaction.title}
                 </TableCell>
-                <TableCell>{transaction.amount}</TableCell>
+                <TableCell>${transaction.amount.toFixed(2)}</TableCell>
+                <TableCell>{transaction.transactionType === 0 ? "Expenses":"Income" }</TableCell>
                 <TableCell>
                   {new Date(transaction.transactionDate).toLocaleDateString() +
                     " " +
