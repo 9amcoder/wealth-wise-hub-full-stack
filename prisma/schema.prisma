@@ -35,7 +35,7 @@ model Transaction {
   updatedAt       DateTime         @updatedAt
   userId          String // This is the foreign key that references the User model
   user            User?            @relation(fields: [userId], references: [clerkUserId], onDelete: Cascade)
-   transactionType Int              @default(0) 
+  transactionType Int              @default(0) 
   insightHistory  InsightHistory[] // This field represents the one-to-many relationship
 }
 

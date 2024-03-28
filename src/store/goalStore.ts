@@ -5,7 +5,7 @@ import { AxiosError } from "axios";
 import { create } from "zustand";
 
 interface GoalStore {
-    goal: GoalHistory | null,
+    goal: GoalHistory | null;
     goalByUserId: GoalHistory | null;
     goalLoading: boolean;
     goalError: string | null;
@@ -20,7 +20,6 @@ const useGoalStore = create<GoalStore>((set) => ({
     goalError: null,
     getGoalByUserId: async (userId) => {
         try {
-            console.log("Get goal");
             const response = await get(`/goals/${userId}`);
             set({ goalByUserId: response.data });
             set({ goalError: null, goalLoading: true });

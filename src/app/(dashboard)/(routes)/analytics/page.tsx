@@ -18,8 +18,7 @@ import LoadingComponent from "@/components/dashboard/Loading";
 import GoalUpdateForm from "@/components/dashboard/analytics/GoalUpdateForm";
 import useGoalStore from "@/store/goalStore";
 import useBalanceStore from "@/store/balanceStore";
-import useTransactionStore from "@/store/transactionStore";
-import useExpenseStore from "@/store/expenseStore";
+import useChartDataStore from "@/store/chartDataStore";
 
 interface AnalyticPageProps { }
 
@@ -27,9 +26,8 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const [insights, setInsights] = useState(null);
-  const [balance, setBalance] = useState();
   const [chartData, setChartData] = useState({});
-  const [chartDataLoading, setChartDataLoading] = useState(true);
+  const [chartLoading, setChartLoading] = useState(true);
   const [insightLoading, setInsightLoading] = useState(true);
 
   const {
@@ -40,81 +38,58 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   } = useGoalStore();
 
   const {
-    balanceLoading,
+    currentBalanceLoading,
     balanceError,
-    originalBalanceByUserId,
-    getOriginalBalanceByUserId
+    currentBalanceByUserId,
+    getCurrentBalanceByUserId
   } = useBalanceStore();
 
   const {
-    expenseLoading,
-    expenseError,
-    expensesByUserId,
-    getExpensesByUserId
-  } = useExpenseStore();
-
-  const {
-    loading,
-    transactionError,
-    transactionsByUserId,
-    getTransactionByUserId
-  } = useTransactionStore();
+    chartDataLoading,
+    chartDataError,
+    chartElements,
+    getChartDataByUserId
+  } = useChartDataStore();
 
   // fetch data from the server (see app/api folder)
   useEffect(() => {
     const loadUserById = async () => {
       try {
         if (isLoaded) {
-          await getTransactionByUserId(user?.id || "");
+          await getCurrentBalanceByUserId(user?.id || "");
           await getGoalByUserId(user?.id || "");
-          await getOriginalBalanceByUserId(user?.id || "");
-          await getExpensesByUserId(user?.id || "");
+          await getChartDataByUserId(user?.id || "");
 
-          console.log("Begin calculation");
-          console.log("original Balance: " + originalBalanceByUserId);
-          console.log("expenses: " + expensesByUserId);
-          if (originalBalanceByUserId && expensesByUserId) {
-            let rawBalanceDate = new Date(originalBalanceByUserId.createdAt);
-            let balanceDate = rawBalanceDate.getMonth() + `-` + rawBalanceDate.getFullYear();
+            const chart_periods = chartElements.map(e => e.period);
+            const chart_budgets = chartElements.map(e => e.budgets);
+            const chart_expenses = chartElements.map(e => e.expenses);
+            const chart_deposits = chartElements.map(e => e.deposits);
 
-            console.log("Get expense periods");
-            let periods = [];
-            let budget = [];
-
-            let expense_periods = expensesByUserId.map(expense => expense.TransactionPeriod);
-
-            console.log("Get new balance");
-            let new_budget = originalBalanceByUserId.balance;
-            budget.push(new_budget);
-
-            for (var i = 0; i < expensesByUserId.length; i++) {
-              new_budget = new_budget - expensesByUserId[i].TotalExpense;
-
-              if (balanceDate !== expense_periods[i]) {
-                budget.push(new_budget);
-              }
-            }
-
-            periods.push(...expense_periods);
-            let expenses = expensesByUserId.map(expense => expense.TotalExpense);
-
-            console.log("Set up charts");
-            const chartData = {
-              labels: periods,
+            const data = {
+              labels: chart_periods,
               datasets: [
                 {
                   label: "Budget",
-                  data: budget,
+                  data: chart_budgets,
                   fill: false,
-                  borderColor: "rgba(75, 192, 192, 1)",
+                  borderColor: "rgba(52, 44, 255, 1)",
                   pointBorderColor: "blue",
                   tension: 0.1,
                 },
                 {
                   label: "Expenses",
-                  data: expenses,
+                  data: chart_expenses,
                   fill: false,
-                  borderColor: "rgba(45, 102, 92, 1)",
+                  borderColor: "rgba(235,74, 75, 1)",
+                  borderDash: [5, 5],
+                  pointBorderColor: "red",
+                  tension: 0.1,
+                },
+                {
+                  label: "Deposits",
+                  data: chart_deposits,
+                  fill: false,
+                  borderColor: "rgba(191,214, 65, 1)",
                   borderDash: [5, 5],
                   pointBorderColor: "green",
                   tension: 0.1,
@@ -122,22 +97,17 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
               ],
             };
 
-            const balance = budget[budget.length - 1];
-            setBalance(balance);
-
-            setChartData(chartData);
-            setChartDataLoading(false);
-            console.log("Begin End calculation");
-          }
+            setChartData(data);
+            setChartLoading(false);
         }
       } catch (error) {
         console.log(error);
       }
     };
     loadUserById();
-  }, [getTransactionByUserId, getGoalByUserId, getOriginalBalanceByUserId, getExpensesByUserId, setBalance, setChartData, setChartDataLoading, user?.id, isLoaded]);
+  }, [getCurrentBalanceByUserId, getGoalByUserId, setChartData, setChartLoading, user?.id, isLoaded]);
 
-  if (loading || goalLoading || balanceLoading || expenseLoading || chartDataLoading) {
+  if (goalLoading || currentBalanceLoading || chartDataLoading || chartLoading) {
     return <LoadingComponent />;
   }
 
@@ -146,6 +116,10 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   }
 
   if (balanceError) {
+    return <div> Error: {balanceError}</div>;
+  }
+
+  if (chartDataError) {
     return <div> Error: {balanceError}</div>;
   }
 
@@ -170,7 +144,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                 </div>
                 <div className="p-3 col-span-1 align-items: center flex flex-col">
                   <h2>Balance</h2>
-                  <h3 className="pt-3 text-gray-10">${balance}</h3>
+                  <h3 className="pt-3 text-gray-10">${currentBalanceByUserId}</h3>
                 </div>
               </div>
             </div>
@@ -215,11 +189,11 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
             <div className="col-span-1 ">
               <div className="grid gap-4 items-center justify-center">
                 {
-                  (insightLoading) 
-                  ? < Button className="text-[#282458] w-[100px]" variant="outline" type="button" onClick={async () => { await getInsights() }}>More</Button> 
-                  : (!insights) 
-                    ? <LoadingComponent /> 
-                    : <div>{insights}</div>
+                  (insightLoading)
+                    ? < Button className="text-[#282458] w-[100px]" variant="outline" type="button" onClick={async () => { await getInsights() }}>More</Button>
+                    : (!insights)
+                      ? <LoadingComponent />
+                      : <div>{insights}</div>
                 }
               </div>
             </div>
