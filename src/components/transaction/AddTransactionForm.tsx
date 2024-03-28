@@ -22,6 +22,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Input } from "../ui/input";
 import LoadingComponent from "../dashboard/Loading";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+
 
 export const addTransactionSchema = z.object({
   id: z.string().optional(),
@@ -29,6 +31,7 @@ export const addTransactionSchema = z.object({
   amount: z.number().positive(),
   transactionDate: z.union([z.date(), z.string()]),
   userId: z.string(),
+  transactionType: z.number().min(0).max(1),
 });
 
 const AddTransactionForm: React.FC = () => {
@@ -40,6 +43,7 @@ const AddTransactionForm: React.FC = () => {
   const { toast } = useToast();
 
   const user_id = user?.id;
+  const registered_date = user?.createdAt || new Date();
 
   const form = useForm<z.infer<typeof addTransactionSchema>>({
     resolver: zodResolver(addTransactionSchema),
@@ -48,17 +52,19 @@ const AddTransactionForm: React.FC = () => {
       amount: 0,
       transactionDate: new Date(),
       userId: user_id || "",
+      transactionType: 0,
     },
   });
 
   const onSubmit = async (data: z.infer<typeof addTransactionSchema>) => {
-    const { title, amount, transactionDate, userId } = data;
+    const { title, amount, transactionDate, userId, transactionType } = data;
 
     const newTransactionData = {
       title,
       amount,
       transactionDate,
       userId,
+      transactionType,
     } as Transaction;
 
     try {
@@ -74,7 +80,7 @@ const AddTransactionForm: React.FC = () => {
         title: "Transaction failed to add",
         description: "error",
         duration: 5000,
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -160,12 +166,45 @@ const AddTransactionForm: React.FC = () => {
                     timeFormat="HH:mm"
                     timeIntervals={15}
                     timeCaption={"Time"}
+                    minDate={new Date(registered_date)}
+                    maxDate={new Date()} // Prevents user from selecting future date
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             );
           }}
+        />
+
+        <FormField
+          control={form.control}
+          name="transactionType"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>Choose type of transaction</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={(value) => field.onChange(Number(value))}
+                  defaultValue={String(field.value)}
+                  className="flex flex-col space-y-1"
+                >
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value={String(1)} />
+                    </FormControl>
+                    <FormLabel className="font-normal">Income</FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value={String(0)} />
+                    </FormControl>
+                    <FormLabel className="font-normal">Expenses</FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
 
         <Button type="submit" className="w-full">
