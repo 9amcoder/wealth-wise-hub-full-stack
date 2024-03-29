@@ -8,6 +8,7 @@ const transactionSchema = z.object({
   title: z.string(),
   transactionDate: z.string().optional(),
   amount: z.number(),
+  transactionType: z.number(),
 });
 
 export async function GET() {
@@ -29,7 +30,6 @@ export async function POST(req: Request, res: Response) {
         clerkUserId: payload.userId,
       },
     });
-
     if (!user) {
       return Response.json(
         {
@@ -58,6 +58,7 @@ export async function POST(req: Request, res: Response) {
         title: payload.title,
         transactionDate: payload.transactionDate,
         amount: payload.amount,
+        transactionType: payload.transactionType,
       },
     });
     return Response.json(transaction);
@@ -119,6 +120,7 @@ export async function PUT(req: Request, res: Response) {
         title: payload.title,
         transactionDate: payload.transactionDate,
         amount: payload.amount,
+        transactionType: payload.transactionType,
       },
     });
     return Response.json(transaction);
