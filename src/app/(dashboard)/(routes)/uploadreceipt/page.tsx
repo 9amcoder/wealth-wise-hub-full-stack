@@ -8,11 +8,22 @@ import { get, post } from "@/config/axiosConfig";
 import { Label } from "@/components/ui/label";
 import React from "react";
 import LoadingComponent from "@/components/dashboard/Loading";
+import { useRouter } from "next/navigation";
+
+interface ExtractedText {
+  title: string;
+  amount: number;
+  transactionDate: string;
+  transactionType: string;
+}
 
 const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
   const [selectedFile, setSelectedFile] = useState<any>();
-  const [extractedText, setExtractedText] = useState<any>("");
+  const [extractedText, setExtractedText] = useState<ExtractedText | null>(
+    null
+  );
   const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -37,7 +48,7 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
       req,
       {
         headers: {
-          "Ocp-Apim-Subscription-Key": process.env.AZURE_KEY,
+          "Ocp-Apim-Subscription-Key": "",
           "Content-Type": "application/json",
         },
       }
@@ -59,12 +70,19 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
     const result = await analyseResults(operationId);
 
     if (result) {
-      const analyzedReceipts = result.analyzeResult.documents.map(
-        (extractedReceipt: any, idx: any) => {
-          console.log("receipt", extractedReceipt);
-          setExtractedText(extractedReceipt);
-        }
-      );
+      const document = result.analyzeResult.documents[0];
+      const date = document?.fields?.TransactionDate?.content ?? "";
+      const time = document?.fields?.TransactionTime?.content ?? "";
+      const dateTime = `${date} ${time}`;
+
+      const extractedData: ExtractedText = {
+        title: document?.fields?.MerchantName?.valueString ?? "",
+        amount: parseFloat(document?.fields?.Total?.content ?? "0"),
+        transactionDate: dateTime ?? "",
+        transactionType: "Expense",
+      };
+
+      setExtractedText(extractedData);
     }
     setLoading(false);
   };
@@ -79,7 +97,7 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
           `https://wealthwise-receipts.cognitiveservices.azure.com/formrecognizer/documentModels/prebuilt-receipt/analyzeResults/${operationId}?api-version=2023-07-31`,
           {
             headers: {
-              "Ocp-Apim-Subscription-Key": process.env.AZURE_KEY,
+              "Ocp-Apim-Subscription-Key": "",
             },
           }
         );
@@ -112,14 +130,14 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
   return (
     <>
       <div>
-        <div className="col-span-1">
+        <div>
           <Card>
             <CardHeader>
               <CardTitle className="text-[#282458]">Upload Invoice</CardTitle>
             </CardHeader>
             <CardContent>
               <form>
-                <div className="grid w-full items-center gap-4">
+                <div className="w-1/4 ">
                   <div className="flex flex-col space-y-1.5">
                     <Input
                       id="picture"
@@ -158,40 +176,20 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
                 <form>
                   <div className="grid grid-cols-2 gap-6 py-4">
                     <Label>Merchant Name:</Label>
-                    <Input
-                      value={extractedText?.fields?.MerchantName?.valueString}
-                    />
+                    <Input value={extractedText.title} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    {/* {extractedText?.fields?.Items?.valueArray?.map(
-                      (item: any, index: number) => (
-                        <React.Fragment key={index}>
-                          <Label>Item {index + 1} Description:</Label>
-
-                          <Input
-                            value={item?.valueObject?.Description?.valueString}
-                          />
-                          <Label>Item {index + 1} Price:</Label>
-                          <Input
-                            value={item?.valueObject?.TotalPrice?.content}
-                          />
-                        </React.Fragment>
-                      )
-                    )} */}
                     <Label>Transaction Date:</Label>
-                    <Input
-                      value={extractedText?.fields?.TransactionDate?.content}
-                    />
-                    {/* <Label>Tax Details:</Label>
-                    <Input value={extractedText?.fields?.TotalTax?.content} /> */}
+                    <Input value={extractedText.transactionDate} />
                     <Label>Total Money Spent:</Label>
-                    <Input value={extractedText?.fields?.Total?.content} />
+                    <Input value={extractedText.amount} />
                   </div>
                   <Button
                     className="text-[#282458] mt-2"
                     variant="outline"
-                    type="button">
+                    type="button"
+                    onClick={() => router.push(`/addtransaction`)}>
                     Submit
                   </Button>
                 </form>
