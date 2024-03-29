@@ -66,7 +66,7 @@ export default function GoalUpdateFormComponent({ goal }: GoalUpdateFormComponen
         resolver: zodResolver(formSchema),
         defaultValues: {
             target_amount: goal?.goalAmount,
-            target_date: goal?.goalDate
+            target_date: goal?.goalDate ? new Date(goal.goalDate) : undefined
         },
     })
 
@@ -78,6 +78,7 @@ export default function GoalUpdateFormComponent({ goal }: GoalUpdateFormComponen
         return <div> Error: {goalError}</div>;
     }
 
+    const cardDescription = "Make changes to your goal here. Click save when you're done."
     return (
         <Dialog>
             <DialogTrigger asChild>
@@ -89,7 +90,7 @@ export default function GoalUpdateFormComponent({ goal }: GoalUpdateFormComponen
                         <Card className="w-[460px] border-hidden">
                             <CardHeader>
                                 <CardTitle>Update goal</CardTitle>
-                                <CardDescription>Make changes to your goal here. Click save when you're done.</CardDescription>
+                                <CardDescription>{cardDescription}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <FormField control={form.control} name="target_amount" render={({ field }) => (
