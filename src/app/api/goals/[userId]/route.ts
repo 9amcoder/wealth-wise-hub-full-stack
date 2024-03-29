@@ -7,7 +7,7 @@ export async function GET(
     { params } : { params: { userId: string } }
 ){
     try {
-        const goal = await prisma.goalHistory.findMany({
+        const goal = await prisma.goalHistory.findUnique({
             where: {
                 userId: params.userId
             }
