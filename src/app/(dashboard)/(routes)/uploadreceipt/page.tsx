@@ -13,8 +13,8 @@ import { useRouter } from "next/navigation";
 interface ExtractedText {
   title: string;
   amount: number;
-  transactionDate: string;
-  transactionType: string;
+  transactionDate: Date;
+  transactionType: number;
 }
 
 const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
@@ -71,15 +71,19 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
 
     if (result) {
       const document = result.analyzeResult.documents[0];
-      const date = document?.fields?.TransactionDate?.content ?? "";
-      const time = document?.fields?.TransactionTime?.content ?? "";
-      const dateTime = `${date} ${time}`;
+      const dateextract = document?.fields?.TransactionDate?.valueDate ?? "";
+      const timeextract = document?.fields?.TransactionTime?.content ?? "";
+
+      const dateTime = `${dateextract}T${timeextract}Z`;
+      console.log("datetime", dateTime);
+
+      const dateTimeObj = new Date(dateTime);
 
       const extractedData: ExtractedText = {
         title: document?.fields?.MerchantName?.valueString ?? "",
         amount: parseFloat(document?.fields?.Total?.content ?? "0"),
-        transactionDate: dateTime ?? "",
-        transactionType: "Expense",
+        transactionDate: dateTimeObj ?? "",
+        transactionType: 0,
       };
 
       setExtractedText(extractedData);
