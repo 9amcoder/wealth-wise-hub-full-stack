@@ -25,6 +25,7 @@ import LoadingComponent from "../dashboard/Loading";
 import { addTransactionSchema } from "./AddTransactionForm";
 import { format } from "date-fns";
 import { useEffect } from "react";
+import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
 interface UpdateTransactionFormProps {
   id: string;
@@ -43,6 +44,8 @@ const UpdateTransactionForm: React.FC<UpdateTransactionFormProps> = ({
 
   const { user } = useUser();
 
+  const registered_date = user?.createdAt || new Date();
+
   const router = useRouter();
   const { toast } = useToast();
 
@@ -50,22 +53,20 @@ const UpdateTransactionForm: React.FC<UpdateTransactionFormProps> = ({
 
   const form = useForm<z.infer<typeof addTransactionSchema>>({
     resolver: zodResolver(addTransactionSchema),
-    defaultValues: transactionDataById ?? {
-      title: undefined,
-      amount: undefined,
-      transactionDate: undefined,
-      userId: undefined,
-    },
+    defaultValues: transactionDataById ?? {}
   });
 
   const onSubmit = async (data: z.infer<typeof addTransactionSchema>) => {
-    const { title, amount, transactionDate, userId, id } = data;
+    const { title, amount, transactionDate, userId, id, transactionType } =
+      data;
+
     const newTransactionData = {
       id,
       title,
       amount,
       transactionDate,
       userId,
+      transactionType: Number(transactionType),
     } as Transaction;
 
     try {
@@ -98,8 +99,12 @@ const UpdateTransactionForm: React.FC<UpdateTransactionFormProps> = ({
   }, [id, getTransactionById]);
 
   useEffect(() => {
+      form.reset(transactionDataById ?? {});
+  }, [transactionDataById, form]);
+
+  useEffect(() => {
     if (transactionDataById) {
-      form.reset(transactionDataById);
+      form.setValue('transactionType', transactionDataById.transactionType);
     }
   }, [transactionDataById, form]);
 
@@ -184,12 +189,48 @@ const UpdateTransactionForm: React.FC<UpdateTransactionFormProps> = ({
                     timeFormat="HH:mm"
                     timeIntervals={15}
                     timeCaption={"Time"}
+                    minDate={new Date(registered_date)}
+                    maxDate={new Date()}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             );
           }}
+        />
+
+        <FormField
+          control={form.control}
+          name="transactionType"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>Choose type of transaction</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  key={field.value} 
+                  onValueChange={(value) => field.onChange(Number(value))}
+                  defaultValue={
+                    field.value !== undefined ? String(field.value) : undefined
+                  }
+                  className="flex flex-col space-y-1"
+                >
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value={String(1)} />
+                    </FormControl>
+                    <FormLabel className="font-normal">Income</FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value={String(0)} />
+                    </FormControl>
+                    <FormLabel className="font-normal">Expenses</FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
         />
 
         <Button type="submit" className="w-full">
