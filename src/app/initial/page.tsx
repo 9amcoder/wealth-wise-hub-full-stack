@@ -54,7 +54,6 @@ const InitialPage: React.FC<InitialPageProps> = () => {
         balance: z.coerce.number().min(0, {
           message: "Balance must be a postitive number",
         }),
-        goal_title: z.string(),
         target_amount: z.coerce.number().min(0.1, {
             message: "Goal must be greater than 0"
         }),
@@ -67,8 +66,7 @@ const InitialPage: React.FC<InitialPageProps> = () => {
         resolver: zodResolver(formSchema),
         defaultValues: {
             balance: 0.0,
-            target_amount: 0.0,
-            goal_title: "New Goal"
+            target_amount: 0.0
         },
     })
 
@@ -79,10 +77,8 @@ const InitialPage: React.FC<InitialPageProps> = () => {
         const loadGoalandBalance = async () => {
             if (isLoaded) {
                 try {
-                    //TODO: Temporary hardcoded user id for testing
                     const balance_response = await fetch(`/api/balance/${user?.id}`);
                     const balance = await balance_response.json();
-                    console.log("User id: " + user?.id)
                     console.log(balance)
 
                     const goal_response = await fetch(`/api/goals/${user?.id}`);
@@ -105,7 +101,7 @@ const InitialPage: React.FC<InitialPageProps> = () => {
       if (isLoading) {
         return <LoadingComponent/>
     } else {
-        if(goal.length <= 0 || balance.length <= 0) {
+        if(goal == null || balance == null) {
             return(
                 <div className="grid h-screen place-items-center">
                     <Form {...form}>
@@ -115,23 +111,11 @@ const InitialPage: React.FC<InitialPageProps> = () => {
                                     <CardTitle className="text-[#282458]">{label}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-
                                     <FormField control={form.control} name="balance" render={({ field }) => (
                                             <FormItem>
                                                 <FormLabel className="text-[#282458]">Balance</FormLabel>
                                                 <FormControl>
                                                     <Input type="number" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <br/>
-                                    <FormField control={form.control} name="goal_title" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-[#282458]">Goal Title</FormLabel>
-                                                <FormControl>
-                                                    <Input type="string" {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -219,8 +203,7 @@ const InitialPage: React.FC<InitialPageProps> = () => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    userId: user?.id, 
-                    goalName: values.goal_title,
+                    userId: user?.id,
                     goalAmount: values.target_amount, 
                     goalDate: values.target_date}),
             })
@@ -231,7 +214,7 @@ const InitialPage: React.FC<InitialPageProps> = () => {
         if(results[0].status == 200 && results[1].status == 200) {
             router.push('/dashboard');
         } else {
-            
+            return <div> Error: {error}</div>
         }
     }
 

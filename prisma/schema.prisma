@@ -35,13 +35,12 @@ model Transaction {
   updatedAt       DateTime         @updatedAt
   userId          String // This is the foreign key that references the User model
   user            User?            @relation(fields: [userId], references: [clerkUserId], onDelete: Cascade)
-   transactionType Int              @default(0) 
+  transactionType Int              @default(0) 
   insightHistory  InsightHistory[] // This field represents the one-to-many relationship
 }
 
 model GoalHistory {
   id             String           @id @default(uuid())
-  goalName       String           @default("Untitled")
   goalAmount     Float            @default(0)
   goalDate       DateTime?
   createdAt      DateTime         @default(now())
@@ -52,13 +51,13 @@ model GoalHistory {
 }
 
 model BalanceHistory {
-  id             String           @id @default(uuid())
+  userId         String           @id @unique
+  id             String           @default(uuid())@unique
   balance        Float            @default(0)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
-  userId         String           @unique   // This is the foreign key that references the User model
-  user           User?             @relation(fields: [userId], references: [clerkUserId], onDelete: Cascade)
-  insightHistory InsightHistory[] // This field represents the one-to-many relationship
+  user           User?            @relation(fields: [userId], references: [clerkUserId], onDelete: Cascade)
+  insightHistory InsightHistory[]
 }
 
 model InsightHistory {
