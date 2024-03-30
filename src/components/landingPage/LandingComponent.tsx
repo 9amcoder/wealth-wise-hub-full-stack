@@ -1,4 +1,5 @@
 import { Gem, Import, Menu, SmilePlus } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 interface LandingComponentProps {}
@@ -32,6 +33,9 @@ const LandingComponent: React.FC<LandingComponentProps> = () => {
               >
                 Log In
               </Link>
+            </div>
+            <div>
+              <Image src="/dashboard.png" width={600} height={300} alt="Landing" />
             </div>
           </div>
         </div>

@@ -12,7 +12,6 @@ export const MobileNav = () => {
   const [state, setState] = useState(false);
   const pathname = usePathname();
 
-
   return (
     <nav className="bg-white w-full border-b md:border-0 md:mt-5 md:hidden">
       <div className="items-center px-4 max-w-screen-xl mx-auto md:flex md:px-8">
@@ -26,6 +25,8 @@ export const MobileNav = () => {
               <Menu />
             </Button>
           </div>
+          {pathname.replace("/", "").charAt(0).toUpperCase() +
+            pathname.replace("/", "").slice(1).toLowerCase()}
           <UserButton afterSignOutUrl="/" />
         </div>
         <div
@@ -53,7 +54,7 @@ export const MobileNav = () => {
               </Link>
             ))}
             {state && (
-                // use this button later if needed
+              // use this button later if needed
               <>
                 {/* <div className="flex justify-end pr-5">
                 <Button variant="ghost" >
@@ -65,9 +66,8 @@ export const MobileNav = () => {
                     B
                   </Button>
                 </div> */}
-                <h1 className="text-sm text-black" >WealthWise Hub v1.0</h1>
+                <h1 className="text-sm text-black">WealthWise Hub v1.0</h1>
               </>
-              
             )}
           </ul>
         </div>
