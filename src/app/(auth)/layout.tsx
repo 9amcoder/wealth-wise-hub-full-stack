@@ -1,5 +1,9 @@
+
+import AnimatedText from "@/components/auth/AnimatedText";
+import Image from "next/image";
+
 const title = "WealthWise Hub";
-const description = "Let's grow together";
+const description = "Let's Grow Together";
 
 const AuthLayout = ({ children } : {
     children: React.ReactNode;
@@ -9,11 +13,13 @@ const AuthLayout = ({ children } : {
             <div className="w-full md:w-1/2 flex items-center justify-center">
                 {children}
             </div>
-            <div className="w-full md:w-1/2 flex items-center justify-center bg-blue-950">
+            <div className="w-full md:w-1/2 flex items-center justify-center bg-black">
                 <div className="text-center">
                     <h1 className="text-yellow-500 text-lg md:text-3xl text-bold mb-5" >{title}</h1>
-                    <p className="text-yellow-500 text-sm md:text-lg"> {description}</p>
+                    <AnimatedText />
+                    {/* <p className="text-yellow-500 text-sm md:text-lg"> {description}</p> */}
                     {/* <img src="logo.png" alt="Business Logo" /> */}
+                    {/* <Image src="/coin2.gif" alt="Business Logo" width={200} height={200} /> */}
                 </div>
             </div>
        </div>

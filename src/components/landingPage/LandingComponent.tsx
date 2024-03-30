@@ -1,6 +1,7 @@
 import { Gem, Import, Menu, SmilePlus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import AnimatedText from "../auth/AnimatedText";
 
 interface LandingComponentProps {}
 
@@ -34,8 +35,9 @@ const LandingComponent: React.FC<LandingComponentProps> = () => {
                 Log In
               </Link>
             </div>
-            <div>
-              <Image src="/dashboard.png" width={600} height={300} alt="Landing" />
+            <div className="text-center pt-5">
+              <AnimatedText />
+              <Image src="/dashboard.png" width={600} height={300} alt="Landing" className="pt-5" />
             </div>
           </div>
         </div>
@@ -48,17 +50,17 @@ const LandingComponent: React.FC<LandingComponentProps> = () => {
                 How It Works
               </h2>
               <h3 className="text-sm md:text-lg text-gray-500">
-                Design to fulfill your Financial Freedom as early as possible in
-                simple 3 steps:{" "}
+                Design to fulfill your financial freedom as early as possible in
+                three simple steps:{" "}
               </h3>
               <div className="grid grid-cols-1 gap-8 mt-8 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="flex flex-col items-center space-y-4">
                   <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2]">
                     <SmilePlus size={24} color="#fff" />
                   </div>
-                  <h3 className="text-xl font-semibold">Create an Account</h3>
+                  <h3 className="text-xl font-semibold">Create an account</h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Sign up for an account to get started.
+                    Sign up for an account to get started
                   </p>
                 </div>
                 <div className="flex flex-col items-center space-y-4">
@@ -76,9 +78,9 @@ const LandingComponent: React.FC<LandingComponentProps> = () => {
                   <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2]">
                     <Gem size={24} color="#fff" />
                   </div>
-                  <h3 className="text-xl font-semibold">Start Managing</h3>
+                  <h3 className="text-xl font-semibold">Start managing</h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Take control of your personal finances.
+                    Take control of your personal finances
                   </p>
                 </div>
               </div>
