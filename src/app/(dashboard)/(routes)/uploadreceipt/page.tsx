@@ -1,14 +1,29 @@
 "use client";
+import useTransactionStore from "@/store/transactionStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, MouseEventHandler, useState } from "react";
 import Image from "next/image";
 import { get, post } from "@/config/axiosConfig";
 import { Label } from "@/components/ui/label";
+import { useToast } from "../../../../components/ui/use-toast";
 import React from "react";
 import LoadingComponent from "@/components/dashboard/Loading";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import * as z from "zod";
+import { Transaction } from "@prisma/client";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface ExtractedText {
   title: string;
@@ -17,6 +32,15 @@ interface ExtractedText {
   transactionType: number;
 }
 
+export const addTransactionSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().min(1, { message: "must be 1 character long" }).max(255),
+  amount: z.number().positive(),
+  transactionDate: z.union([z.date(), z.string()]),
+  userId: z.string(),
+  transactionType: z.number().min(0).max(1),
+});
+
 const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
   const [selectedFile, setSelectedFile] = useState<any>();
   const [extractedText, setExtractedText] = useState<ExtractedText | null>(
@@ -24,6 +48,10 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
   );
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
+  const { addTransaction } = useTransactionStore();
+  const { user } = useUser();
+  const user_id = user?.id;
+  const { toast } = useToast();
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -64,7 +92,7 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
     return operationId;
   };
 
-  const handleSubmit = async () => {
+  const extractButton = async () => {
     setLoading(true);
     const operationId = await initialanalysis();
     const result = await analyseResults(operationId);
@@ -92,7 +120,7 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
   };
 
   const analyseResults = async (operationId: any) => {
-    const maxRetries = 5; // Maximum number of retries
+    const maxRetries = 10; // Maximum number of retries
     let retries = 0;
 
     const fetchResults: any = async () => {
@@ -131,6 +159,52 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
     return fetchResults();
   };
 
+  const form = useForm<z.infer<typeof addTransactionSchema>>({
+    resolver: zodResolver(addTransactionSchema),
+    defaultValues: {
+      title: "Receipt Expense",
+      amount: 0,
+      transactionDate: new Date(),
+      userId: user_id,
+      transactionType: 0,
+    },
+  });
+
+  const handleClick: MouseEventHandler<HTMLButtonElement> = async () => {
+    await onSubmit(form.getValues());
+  };
+  const onSubmit = async (data: z.infer<typeof addTransactionSchema>) => {
+    console.log("i am here");
+
+    if (extractedText) {
+      const newTransactionData = {
+        title: extractedText.title,
+        amount: extractedText.amount,
+        transactionDate: extractedText.transactionDate,
+        userId: user_id,
+        transactionType: 0,
+      } as Transaction;
+
+      try {
+        console.log("adding to transaction");
+        await addTransaction(newTransactionData);
+        toast({
+          title: "Transaction added successfully",
+          duration: 5000,
+        });
+        router.push(`/transaction`);
+      } catch (error) {
+        console.log("error", error);
+        toast({
+          title: "Transaction failed to add",
+          description: "error",
+          duration: 5000,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   return (
     <>
       <div>
@@ -167,7 +241,7 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
                   variant="outline"
                   type="button"
                   disabled={!selectedFile}
-                  onClick={handleSubmit}>
+                  onClick={extractButton}>
                   Extract
                 </Button>
               </form>
@@ -177,26 +251,48 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
             <div className="px-4">
               {loading && <LoadingComponent />}
               {extractedText && (
-                <form>
-                  <div className="grid grid-cols-2 gap-6 py-4">
-                    <Label>Merchant Name:</Label>
-                    <Input value={extractedText.title} />
-                  </div>
+                <Form {...form}>
+                  <form>
+                    <FormItem>
+                      <FormLabel>{"Merchant Name "}</FormLabel>
+                      <FormControl>
+                        <Input
+                          value={extractedText.title}
+                          className="col-span-3"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <Label>Transaction Date:</Label>
-                    <Input value={extractedText.transactionDate} />
-                    <Label>Total Money Spent:</Label>
-                    <Input value={extractedText.amount} />
-                  </div>
-                  <Button
-                    className="text-[#282458] mt-2"
-                    variant="outline"
-                    type="button"
-                    onClick={() => router.push(`/addtransaction`)}>
-                    Submit
-                  </Button>
-                </form>
+                    <FormItem>
+                      <FormLabel>{"Transaction Date: "}</FormLabel>
+                      <FormControl>
+                        <Input
+                          value={String(extractedText.transactionDate)}
+                          className="col-span-3"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+
+                    <FormItem>
+                      <FormLabel>{"Transaction Amount: "}</FormLabel>
+                      <FormControl>
+                        <Input
+                          value={extractedText.amount}
+                          className="col-span-3"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      onClick={handleClick}>
+                      Submit
+                    </Button>
+                  </form>
+                </Form>
               )}
             </div>
           </Card>

@@ -67,7 +67,9 @@ const useTransactionStore = create<TransactionStore>((set) => ({
   addTransaction: async (transaction) => {
     set({ transactionError: null, loading: true });
     try {
+      console.log("transaction: ", transaction);
       const response = await post("/transactions", transaction);
+      console.log(response.data);
       set({ transactions: response.data });
     } catch (transactionError) {
       const errorMessage = handleApiError(transactionError as AxiosError);
@@ -80,10 +82,7 @@ const useTransactionStore = create<TransactionStore>((set) => ({
   updateTransaction: async (transaction) => {
     set({ transactionError: null, loading: true });
     try {
-      const response = await put(
-        `/transactions`,
-        transaction
-      );
+      const response = await put(`/transactions`, transaction);
       const updatedTransactions = response.data;
       set({ transactions: updatedTransactions });
     } catch (transactionError) {
