@@ -4,19 +4,15 @@ import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ROUTES } from "@/constant/routeLabel";
-
+import Image from "next/image";
 
 const SideBar: React.FC = () => {
-
   const pathname = usePathname();
 
   return (
-    <div className="space-y-4 py-4 flex flex-col h-full bg-white text-black border drop-shadow-2xl">
+    <div className="space-y-4 py-4 flex flex-col h-full text-black border-none drop-shadow-xl bg-white">
       <div className="px-3 py-2 flex-1">
-        <Link
-          href="/dashboard"
-          className="flex items-center pl-3 mb-14"
-        >
+        <Link href="/dashboard" className="flex items-center pl-3 mb-14">
           {/* <div className="relative w-20 h-20 mr-4">
             <Image fill alt="Logo" src="/logo-nobg.png" sizes="auto"/>
           </div> */}
@@ -40,6 +36,11 @@ const SideBar: React.FC = () => {
               </div>
             </Link>
           ))}
+        </div>
+        <div className="mt-60">
+          <div className="mb-5">
+            <Image src="/watering.gif" width={500} height={500} alt="icon" />
+          </div>
         </div>
       </div>
     </div>
