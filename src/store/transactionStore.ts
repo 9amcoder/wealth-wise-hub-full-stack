@@ -51,11 +51,10 @@ const useTransactionStore = create<TransactionStore>((set) => ({
     }
   },
   getTransactionByUserId: async (userId) => {
+    set({ transactionError: null, loading: true });
     try {
-      console.log("Get transaction by ID");
       const response = await get(`/transactions/${userId}`);
       set({ transactionsByUserId: response.data });
-      set({ transactionError: null, loading: true });
     } catch (transactionError) {
       const errorMessage = handleApiError(transactionError as AxiosError);
       set({ transactionError: errorMessage });

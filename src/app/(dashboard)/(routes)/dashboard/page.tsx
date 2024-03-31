@@ -29,6 +29,7 @@ const DashboardPage: FunctionComponent = () => {
     balanceError,
     currentBalanceByUserId,
     originalBalanceByUserId,
+    originalBalanceLoading,
     getCurrentBalanceByUserId,
   } = useBalanceStore();
 
@@ -123,15 +124,19 @@ const DashboardPage: FunctionComponent = () => {
     await getTransactionByUserId(user?.id || "");
   };
 
-  if (currentBalanceLoading || loading || !isLoaded) {
+  if (currentBalanceLoading || loading || !isLoaded || originalBalanceLoading) {
     return <LoadingComponent />;
+  }
+  
+  if (balanceError || transactionError) {
+    return <div>Error: {balanceError || transactionError}</div>;
   }
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="bg-transparent">
-          <Button onClick={handleRefresh} variant="outline" className="w-full">
+          <Button onClick={handleRefresh} variant="outline" className="w-full text-black">
             {" "}
             <RefreshCcw size={15} className="mr-2" />
             Refresh
