@@ -43,7 +43,7 @@ export const addTransactionSchema = z.object({
   transactionType: z.number().min(0).max(1),
 });
 
-const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
+const UploadReceiptPage: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<any>();
   const [extractedText, setExtractedText] = useState<ExtractedText | null>(
     null
@@ -109,17 +109,18 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
 
     if (result) {
       const document = result.analyzeResult.documents[0];
-      const dateextract = document?.fields?.TransactionDate?.valueDate ?? "";
-      const timeextract = document?.fields?.TransactionTime?.valueTime ?? "";
-
-      const dateTime = `${dateextract}T${timeextract}Z`;
-
-      const dateTimeObj = new Date(dateTime);
+      var dateTimeObj;
+      const dateextract = document?.fields?.TransactionDate?.valueDate;
+      const timeextract = document?.fields?.TransactionTime?.valueTime;
+      if (dateextract && timeextract) {
+        const dateTime = `${dateextract}T${timeextract}Z`;
+        dateTimeObj = new Date(dateTime);
+      }
 
       const extractedData: ExtractedText = {
         title: document?.fields?.MerchantName?.valueString ?? "",
         amount: Number(document?.fields?.Total?.valueNumber ?? 0),
-        transactionDate: dateTimeObj ?? "",
+        transactionDate: dateTimeObj ?? new Date(),
         transactionType: 0,
       };
 
