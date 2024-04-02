@@ -3,10 +3,11 @@ import useTransactionStore from "@/store/transactionStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ChangeEvent, MouseEventHandler, useState } from "react";
+import { ChangeEvent, MouseEventHandler, useEffect, useState } from "react";
 import Image from "next/image";
 import { get, post } from "@/config/axiosConfig";
-import { Label } from "@/components/ui/label";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { useToast } from "../../../../components/ui/use-toast";
 import React from "react";
 import LoadingComponent from "@/components/dashboard/Loading";
@@ -21,6 +22,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,9 +48,10 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
   const [extractedText, setExtractedText] = useState<ExtractedText | null>(
     null
   );
+  const [error, setError] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
-  const { addTransaction } = useTransactionStore();
+  const { transactionError, addTransaction } = useTransactionStore();
   const { user } = useUser();
   const user_id = user?.id;
   const { toast } = useToast();
@@ -67,49 +70,55 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
   };
 
   const initialanalysis = async () => {
-    if (selectedFile) var base64 = selectedFile.split("base64,")[1];
+    try {
+      if (selectedFile) var base64 = selectedFile.split("base64,")[1];
 
-    const req = { base64Source: base64 };
-    console.log("process.env.AZURE_KEY", process.env.AZURE_KEY);
-    const response = await post(
-      "https://wealthwise-receipts.cognitiveservices.azure.com/formrecognizer/documentModels/prebuilt-receipt:analyze?api-version=2023-07-31",
-      req,
-      {
-        headers: {
-          "Ocp-Apim-Subscription-Key": "",
-          "Content-Type": "application/json",
-        },
-      }
-    );
+      const req = { base64Source: base64 };
+      console.log("process.env.AZURE_KEY", process.env.AZURE_KEY);
+      const response = await post(
+        "https://wealthwise-receipts.cognitiveservices.azure.com/formrecognizer/documentModels/prebuilt-receipt:analyze?api-version=2023-07-31",
+        req,
+        {
+          headers: {
+            "Ocp-Apim-Subscription-Key": "",
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    console.log(
-      "Document analysis response:",
-      response.headers["apim-request-id"]
-    );
-    const operationId = response.headers["apim-request-id"];
+      console.log(
+        "Document analysis response:",
+        response.headers["apim-request-id"]
+      );
+      const operationId = response.headers["apim-request-id"];
 
-    console.log("operationId", operationId);
-    return operationId;
+      console.log("operationId", operationId);
+      return operationId;
+    } catch (error) {
+      console.error("Error fetching results:", error);
+      setError(true);
+      setLoading(false);
+    }
   };
 
   const extractButton = async () => {
     setLoading(true);
+    setError(false);
     const operationId = await initialanalysis();
     const result = await analyseResults(operationId);
 
     if (result) {
       const document = result.analyzeResult.documents[0];
       const dateextract = document?.fields?.TransactionDate?.valueDate ?? "";
-      const timeextract = document?.fields?.TransactionTime?.content ?? "";
+      const timeextract = document?.fields?.TransactionTime?.valueTime ?? "";
 
       const dateTime = `${dateextract}T${timeextract}Z`;
-      console.log("datetime", dateTime);
 
       const dateTimeObj = new Date(dateTime);
 
       const extractedData: ExtractedText = {
         title: document?.fields?.MerchantName?.valueString ?? "",
-        amount: parseFloat(document?.fields?.Total?.content ?? "0"),
+        amount: Number(document?.fields?.Total?.valueNumber ?? 0),
         transactionDate: dateTimeObj ?? "",
         transactionType: 0,
       };
@@ -135,8 +144,6 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
         );
 
         const { data } = response;
-        console.log("Current status:", data.status);
-
         if (data.status === "running" && retries < maxRetries) {
           retries++;
           console.log(
@@ -152,7 +159,8 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
         }
       } catch (error) {
         console.error("Error fetching results:", error);
-        throw error;
+        setError(true);
+        setLoading(false);
       }
     };
 
@@ -169,13 +177,21 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
       transactionType: 0,
     },
   });
+  useEffect(() => {
+    form.reset(
+      extractedText || {
+        title: "",
+        amount: 0,
+        transactionDate: new Date(),
+        transactionType: 0,
+      }
+    );
+  }, [extractedText, form]);
 
   const handleClick: MouseEventHandler<HTMLButtonElement> = async () => {
     await onSubmit(form.getValues());
   };
   const onSubmit = async (data: z.infer<typeof addTransactionSchema>) => {
-    console.log("i am here");
-
     if (extractedText) {
       const newTransactionData = {
         title: extractedText.title,
@@ -186,13 +202,11 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
       } as Transaction;
 
       try {
-        console.log("adding to transaction");
         await addTransaction(newTransactionData);
         toast({
           title: "Transaction added successfully",
-          duration: 5000,
+          duration: 10000,
         });
-        router.push(`/transaction`);
       } catch (error) {
         console.log("error", error);
         toast({
@@ -207,97 +221,153 @@ const UploadReceiptPage: React.FC<UploadReceiptPage> = () => {
 
   return (
     <>
-      <div>
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-[#282458]">Upload Invoice</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form>
-                <div className="w-1/4 ">
-                  <div className="flex flex-col space-y-1.5">
-                    <Input
-                      id="picture"
-                      type="file"
-                      onChange={handleFileChange}
+      <div className="w-full md:w-3/4 lg:w-full px-4 py-2 mt-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-[#282458]">Upload Invoice</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form>
+              <div className="flex flex-col space-y-1.5">
+                <Input
+                  type="file"
+                  onChange={handleFileChange}
+                  accept=".pdf, .jpeg, .jpg, .png"
+                />
+                {selectedFile && (
+                  <div className="mt-2">
+                    <Image
+                      src={selectedFile}
+                      alt="Preview"
+                      className="rounded-md"
+                      height={0}
+                      width={0}
+                      style={{ width: "auto", height: "255px" }}
                     />
-                    {selectedFile && (
-                      <div className="mt-2">
-                        <Image
-                          src={selectedFile}
-                          alt="Preview"
-                          className="rounded-md"
-                          height={0}
-                          width={0}
-                          style={{ width: "auto", height: "255px" }}
-                        />
-                      </div>
-                    )}
                   </div>
+                )}
+              </div>
+
+              <Button
+                className="text-[#282458] mt-2"
+                variant="outline"
+                type="button"
+                disabled={!selectedFile}
+                onClick={extractButton}>
+                Extract
+              </Button>
+              {error && (
+                <div className="bg-red-500 text-white px-4 py-2 mt-4 rounded-lg shadow-md">
+                  Error extracting data, please click Extract button to retry.
                 </div>
-                <Button
-                  className="text-[#282458] mt-2"
-                  variant="outline"
-                  type="button"
-                  disabled={!selectedFile}
-                  onClick={extractButton}>
-                  Extract
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-          <Card>
-            <div className="px-4">
-              {loading && <LoadingComponent />}
-              {extractedText && (
-                <Form {...form}>
-                  <form>
-                    <FormItem>
-                      <FormLabel>{"Merchant Name "}</FormLabel>
-                      <FormControl>
-                        <Input
-                          value={extractedText.title}
-                          className="col-span-3"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-
-                    <FormItem>
-                      <FormLabel>{"Transaction Date: "}</FormLabel>
-                      <FormControl>
-                        <Input
-                          value={String(extractedText.transactionDate)}
-                          className="col-span-3"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-
-                    <FormItem>
-                      <FormLabel>{"Transaction Amount: "}</FormLabel>
-                      <FormControl>
-                        <Input
-                          value={extractedText.amount}
-                          className="col-span-3"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      onClick={handleClick}>
-                      Submit
-                    </Button>
-                  </form>
-                </Form>
               )}
-            </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+
+      {loading && <LoadingComponent />}
+      {extractedText && (
+        <div className="w-full md:w-3/4 lg:w-full px-4 py-2 mt-4">
+          <Card>
+            <Form {...form}>
+              <form>
+                <div className="w-full md:w-3/4 lg:w-full px-4 py-2 mt-4 flex flex-col space-y-1.5">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => {
+                      return (
+                        <FormItem>
+                          <FormLabel>{"Transaction Title"}</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder={
+                                "Please enter the title of transaction"
+                              }
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="amount"
+                    render={({ field }) => {
+                      return (
+                        <FormItem>
+                          <FormLabel>{"Transaction Amount"}</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder={"Please enter the amount"}
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(parseFloat(e.target.value));
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="transactionDate"
+                    render={({ field }) => {
+                      return (
+                        <FormItem>
+                          <FormLabel>{"Transaction date and time"}</FormLabel>
+                          <FormControl>
+                            <DatePicker
+                              selected={
+                                typeof field.value === "string"
+                                  ? isNaN(Date.parse(field.value))
+                                    ? null
+                                    : new Date(field.value)
+                                  : field.value instanceof Date
+                                  ? new Date(field.value)
+                                  : null
+                              }
+                              onChange={(date) => field.onChange(date)}
+                              placeholderText={"Select date and time"}
+                              className="border ml-5"
+                              dateFormat={"MM-dd-yyyy, HH:mm"}
+                              showTimeSelect
+                              timeFormat="HH:mm"
+                              timeIntervals={15}
+                              timeCaption={"Time"}
+                              minDate={new Date(extractedText.transactionDate)}
+                              maxDate={new Date()}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
+
+                  <Button
+                    type="submit"
+                    className="w-full md:w-1/2 lg:w-full px-4 py-2 mt-2"
+                    onClick={handleClick}>
+                    Submit
+                  </Button>
+                  {transactionError && (
+                    <FormDescription className="text-red-600">
+                      Error: {transactionError}
+                    </FormDescription>
+                  )}
+                </div>
+              </form>
+            </Form>
           </Card>
         </div>
-      </div>
+      )}
     </>
   );
 };
