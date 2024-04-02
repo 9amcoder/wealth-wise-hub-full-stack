@@ -1,8 +1,8 @@
 'use client'
 
-import React, {ChangeEvent, useEffect, useState} from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 
 import {
     Card,
@@ -10,49 +10,57 @@ import {
     CardFooter,
     CardHeader,
     CardTitle,
-  } from "@/components/ui/card"  
-
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/card";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-
-import { format } from "date-fns"
-import { Calendar as CalendarIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Calendar } from "@/components/ui/calendar"
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import LoadingComponent from "@/components/dashboard/Loading";
+import useBalanceStore from "@/store/balanceStore";
+import useGoalStore from "@/store/goalStore";
 
-interface InitialPageProps {}
+interface InitialPageProps { }
 
 const InitialPage: React.FC<InitialPageProps> = () => {
     const { user, isLoaded } = useUser();
-    const [goal, setGoal] = useState([])
-    const [balance, setBalance] = useState([])
-    
-    const [isLoading, setLoading] = useState(true)
-    const [error, setError] = useState('')
+    const [isLoading, setLoading] = useState(true);
+    const router = useRouter();
 
-    const router = useRouter()
+    const {
+        originalBalanceByUserId,
+        balanceError,
+        originalBalanceLoading,
+        getOriginalBalanceByUserId,
+    } = useBalanceStore();
+
+    const {
+        goalLoading,
+        goalError,
+        goalByUserId,
+        getGoalByUserId
+    } = useGoalStore();
 
     const formSchema = z.object({
         balance: z.coerce.number().min(0, {
-          message: "Balance must be a postitive number",
+            message: "Balance must be a postitive number",
         }),
         target_amount: z.coerce.number().min(0.1, {
             message: "Goal must be greater than 0"
@@ -70,39 +78,29 @@ const InitialPage: React.FC<InitialPageProps> = () => {
         },
     })
 
-    const label =  "Let's set your current balance and future goal"
+    const label = "Let's set your current balance and future goal"
 
     // fetch data from the server (see app/api folder)
     useEffect(() => {
         const loadGoalandBalance = async () => {
             if (isLoaded) {
                 try {
-                    const balance_response = await fetch(`/api/balance/${user?.id}`);
-                    const balance = await balance_response.json();
-                    console.log(balance)
+                    await getOriginalBalanceByUserId(user?.id || "");
+                    await getGoalByUserId(user?.id || "");
 
-                    const goal_response = await fetch(`/api/goals/${user?.id}`);
-                    const goal = await goal_response.json();
-                    console.log(goal)
-
-                    setBalance(balance);
-                    setGoal(goal);
-                    
-                    setLoading(false);
                 } catch (error) {
                     console.error('Error:', error);
-                    setError('Error fetching data');
                 }
             }
         };
         loadGoalandBalance();
-      }, [user?.id, isLoaded]);
+    }, [getGoalByUserId, getOriginalBalanceByUserId, user?.id, isLoaded]);
 
-      if (isLoading) {
-        return <LoadingComponent/>
+    if (goalLoading || originalBalanceLoading) {
+        return <LoadingComponent />
     } else {
-        if(goal == null || balance == null) {
-            return(
+        if (goalByUserId == null || originalBalanceByUserId == null) {
+            return (
                 <div className="grid h-screen place-items-center">
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -112,62 +110,62 @@ const InitialPage: React.FC<InitialPageProps> = () => {
                                 </CardHeader>
                                 <CardContent>
                                     <FormField control={form.control} name="balance" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-[#282458]">Balance</FormLabel>
-                                                <FormControl>
-                                                    <Input type="number" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
+                                        <FormItem>
+                                            <FormLabel className="text-[#282458]">Balance</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                     />
-                                    <br/>
+                                    <br />
                                     <FormField control={form.control} name="target_amount" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-[#282458]">Target Amount</FormLabel>
-                                                <FormControl>
-                                                    <Input type="number" {...field} />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
+                                        <FormItem>
+                                            <FormLabel className="text-[#282458]">Target Amount</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                     />
-                                    <br/>
+                                    <br />
                                     <FormField control={form.control} name="target_date" render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-[#282458]">Target Date</FormLabel>
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <FormControl>
-                                                            <Button
-                                                                variant={"outline"}
-                                                                className={cn(
-                                                                    "w-[550px] pl-3 text-left font-normal",
-                                                                    !field.value && "text-muted-foreground"
-                                                                )}
-                                                                >
-                                                                {field.value ? (
-                                                                    format(field.value, "PPP")
-                                                                ) : (
-                                                                    <span>Pick a date</span>
-                                                                )}
-                                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                            </Button>
-                                                        </FormControl>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <FormItem>
+                                            <FormLabel className="text-[#282458]">Target Date</FormLabel>
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                    <FormControl>
+                                                        <Button
+                                                            variant={"outline"}
+                                                            className={cn(
+                                                                "w-[550px] pl-3 text-left font-normal",
+                                                                !field.value && "text-muted-foreground"
+                                                            )}
+                                                        >
+                                                            {field.value ? (
+                                                                format(field.value, "PPP")
+                                                            ) : (
+                                                                <span>Pick a date</span>
+                                                            )}
+                                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                        </Button>
+                                                    </FormControl>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0" align="start">
                                                     <Calendar
                                                         mode="single"
                                                         selected={field.value}
                                                         onSelect={field.onChange}
-                                                        disabled={ (date) => date <= new Date() }
+                                                        disabled={(date) => date <= new Date()}
                                                         initialFocus
                                                     />
-                                                    </PopoverContent>
-                                                </Popover>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
+                                                </PopoverContent>
+                                            </Popover>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                     />
                                 </CardContent>
                                 <CardFooter>
@@ -193,10 +191,10 @@ const InitialPage: React.FC<InitialPageProps> = () => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    userId: user?.id, 
+                    userId: user?.id,
                     balance: values.balance
                 }),
-            }), 
+            }),
             await fetch(`/api/goals/`, {
                 method: "POST",
                 headers: {
@@ -204,22 +202,19 @@ const InitialPage: React.FC<InitialPageProps> = () => {
                 },
                 body: JSON.stringify({
                     userId: user?.id,
-                    goalAmount: values.target_amount, 
-                    goalDate: values.target_date}),
+                    goalAmount: values.target_amount,
+                    goalDate: values.target_date
+                }),
             })
         ];
 
         console.log(results);
 
-        if(results[0].status == 200 && results[1].status == 200) {
+        if (results[0].status == 200 && results[1].status == 200) {
             router.push('/dashboard');
         } else {
-            return <div> Error: {error}</div>
+            return <div>Error</div>
         }
-    }
-
-    if (error) {
-        return <div> Error: {error}</div>
     }
 }
 
