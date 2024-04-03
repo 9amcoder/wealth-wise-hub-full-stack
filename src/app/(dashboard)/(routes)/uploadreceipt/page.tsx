@@ -80,7 +80,7 @@ const UploadReceiptPage: React.FC = () => {
         req,
         {
           headers: {
-            "Ocp-Apim-Subscription-Key": "",
+            "Ocp-Apim-Subscription-Key": "6c6f66256d75448b881ab78b392dbc3e",
             "Content-Type": "application/json",
           },
         }
@@ -139,7 +139,7 @@ const UploadReceiptPage: React.FC = () => {
           `https://wealthwise-receipts.cognitiveservices.azure.com/formrecognizer/documentModels/prebuilt-receipt/analyzeResults/${operationId}?api-version=2023-07-31`,
           {
             headers: {
-              "Ocp-Apim-Subscription-Key": "",
+              "Ocp-Apim-Subscription-Key": "6c6f66256d75448b881ab78b392dbc3e",
             },
           }
         );
