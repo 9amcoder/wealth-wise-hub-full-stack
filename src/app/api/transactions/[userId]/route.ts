@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { decryptTransaction } from "@/lib/data-encryption";
 
 const prisma = new PrismaClient();
 
@@ -12,7 +13,20 @@ export async function GET(
                 userId: params.userId
             }
         });
-        return Response.json(transactions);
+
+        const decryptedTransaction = [];
+
+        transactions.forEach(element => {
+            let newTitle = decryptTransaction(element.title);
+            const transaction = {
+                ...element,
+                title: newTitle,
+            };
+
+            decryptedTransaction.push(transaction);
+        });
+
+        return Response.json(decryptedTransaction);
     } catch (error) {
         console.error(error);
         return Response.error();

@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { encryptTransaction, decryptTransaction } from "@/lib/security";
-import { title } from "process";
+import { encryptTransaction } from "@/lib/data-encryption";
 
 const prisma = new PrismaClient();
 
@@ -16,22 +15,6 @@ const transactionSchema = z.object({
 export async function GET() {
   try {
     const transactions = await prisma.transaction.findMany();
-    
-    const newTransactions = [];
-
-    transactions.forEach(element => {
-      console.log("Before: " + element.title);
-      const transaction = {
-        ...element,
-        title: decryptTransaction(element.title),
-      };
-      console.log("After: " + element.title);
-
-      newTransactions.push(transaction);
-    });
-
-    console.log(newTransactions);
-
     return Response.json(transactions);
   } catch (error) {
     console.error(error);
@@ -96,6 +79,11 @@ export async function POST(req: Request, res: Response) {
 export async function PUT(req: Request, res: Response) {
   try {
     const payload = await req.json();
+
+    // encrypt transaction information
+    let title = payload["title"];
+    payload["title"] = encryptTransaction(title);
+
     const response = transactionSchema.safeParse(payload);
 
     if (!response.success) {
