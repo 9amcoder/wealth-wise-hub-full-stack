@@ -74,17 +74,12 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   } = useChartDataStore();
 
   async function setupChart() {
-    const chart_periods = chartElements.map((e) => e.period);
-    const chart_budgets = chartElements.map((e) => e.budgets);
-    const chart_expenses = chartElements.map((e) => e.expenses);
-    const chart_deposits = chartElements.map((e) => e.deposits);
-
     const data = {
-      labels: chart_periods,
+      labels: chartElements?.periods,
       datasets: [
         {
           label: "Balance",
-          data: chart_budgets,
+          data: chartElements?.budgets,
           fill: false,
           borderColor: "rgba(52, 44, 255, 1)",
           pointBorderColor: "blue",
@@ -92,7 +87,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
         },
         {
           label: "Expenses",
-          data: chart_expenses,
+          data: chartElements?.expenses,
           fill: false,
           borderColor: "rgba(235,74, 75, 1)",
           borderDash: [5, 5],
@@ -101,7 +96,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
         },
         {
           label: "Deposits",
-          data: chart_deposits,
+          data: chartElements?.deposits,
           fill: false,
           borderColor: "rgba(82,233, 125, 1)",
           borderDash: [5, 5],
@@ -122,35 +117,41 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     const balanceChange = useMemo(() => {
     // Ensure the balances is not null and not zero to avoid division by zero
     if (
-      chartElements.length <= 0 || chartElements.at(-1)?.budgets == null || chartElements.at(-2)?.budgets == null || chartElements.at(-2)?.budgets == 0
+      chartElements?.budgets?.length <= 0 || chartElements?.budgets?.at(-1) == null || chartElements?.budgets?.at(-2) == null || chartElements?.budgets?.at(-2) == 0
     ) {
       return 0;
     }
 
     // Calculate the percentage change
-    let previousMonthBudget = chartElements.at(-2)?.budgets;
-    let recentMonthBudget = chartElements.at(-1)?.budgets;
+    let previousMonthBudget = chartElements?.budgets?.at(-2);
+    let recentMonthBudget = chartElements?.budgets?.at(-1);
 
-    const balanceChange = ((recentMonthBudget - previousMonthBudget)/ previousMonthBudget) * 100;
+    console.log("Previous Month Expense: " + chartElements?.expenses?.at(-2));
+    console.log("Recent Month Expense: " + chartElements?.expenses?.at(-1));
 
-    return balanceChange.toFixed(0);
+    const balanceChange = ((previousMonthBudget - recentMonthBudget)/ previousMonthBudget) * 100;
+
+    return Math.round(balanceChange);
   }, [chartElements]) as number; // The return type is number
 
   const expenseChange = useMemo(() => {
     // Ensure the balances is not null and not zero to avoid division by zero
     if (
-      chartElements.length <= 0 || chartElements.at(-1)?.expenses == null || chartElements.at(-2)?.expenses == null || chartElements.at(-2)?.expenses == 0
+      chartElements?.expenses?.length <= 0 || chartElements?.expenses?.at(-1) == null || chartElements?.expenses?.at(-2) == null || chartElements?.expenses?.at(-2) == 0
     ) {
       return 0;
     }
 
     // Calculate the percentage change
-    let previousMonthExpense = chartElements.at(-2)?.expenses;
-    let recentMonthExpense = chartElements.at(-1)?.expenses;
+    let previousMonthExpense = chartElements?.expenses?.at(-2);
+    let recentMonthExpense = chartElements?.expenses?.at(-1);
 
-    const expenseChange = ((recentMonthExpense - previousMonthExpense)/previousMonthExpense) * 100;
+    console.log("Previous Month Expense: " + chartElements?.expenses?.at(-2));
+    console.log("Recent Month Expense: " + chartElements?.expenses?.at(-1));
 
-    return expenseChange.toFixed(0);
+    const expenseChange = ((previousMonthExpense - recentMonthExpense)/previousMonthExpense) * 100;
+
+    return Math.round(expenseChange);
   }, [chartElements]) as number; // The return type is number
 
   // fetch data from the server (see app/api folder)
@@ -247,7 +248,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                 <ArrowUpFromDot size={20} className="text-red-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-medium">${chartElements.at(-1)?.expenses > 0 ? chartElements.at(-1)?.expenses : 0}</div>
+                <div className="text-2xl font-medium">${chartElements?.expenses?.length > 0 ? chartElements?.expenses?.at(-1) : 0}</div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-r from-[#F0FEF6] to-[#CBFFDD]">
@@ -258,7 +259,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                 <ArrowDownToDot size={20} className="text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-medium">${chartElements.at(-1)?.deposits > 0 ? chartElements.at(-1)?.deposits : 0}</div>
+                <div className="text-2xl font-medium">${chartElements?.deposits?.length > 0 ? chartElements?.deposits?.at(-1) : 0}</div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-r from-[#EEF5FF] to-[#CDE3FF]">
@@ -291,6 +292,8 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                   data={chartData}
                   options={{ maintainAspectRatio: false }}
                 />
+                <div></div>
+                <div className="text-sm">Note: Only transactions occurs after balance and goal set up are being used.</div>
               </CardContent>
             </Card>
             <Card className="col-span-3">
@@ -300,9 +303,9 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
               <CardContent>
                   <div>
                     <ul className="list-disc">
-                      {chartElements.length > 1 && <li>Balance has been {balanceChange == 0 ? 'unchanged' : balanceChange < 0 ? 'decreased' : 'increased' } at {Math.abs(balanceChange)}% from the previous month.</li>}
-                      {chartElements.length > 1 && <li><li>Expense was {expenseChange == 0 ? 'unchanged from' : expenseChange < 0 ? `${Math.abs(expenseChange)}% lower than` : `${Math.abs(expenseChange)}% higher than` } the previous month.</li></li>}  
-                      {chartElements.length <= 1 && <li>There is not enough information for insights.</li>}
+                      {chartElements?.periods?.length > 1 && <li>Balance {balanceChange == 0 ? 'did not change' : balanceChange < 0 ? `has been decreased at ${Math.abs(balanceChange)}% ` : `has been increased at ${Math.abs(balanceChange)}%` } from the previous month.</li>}
+                      {chartElements?.periods?.length > 1 && <li><li>Expense was {expenseChange == 0 ? 'unchanged from' : expenseChange < 0 ? `${Math.abs(expenseChange)}% lower than` : `${Math.abs(expenseChange)}% higher than` } the previous month.</li></li>}  
+                      {chartElements?.periods?.length <= 1 && <li>There is not enough information for insights.</li>}
                     </ul>
                   </div>
               </CardContent>

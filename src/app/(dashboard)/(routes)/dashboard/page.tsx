@@ -75,17 +75,12 @@ const DashboardPage: FunctionComponent = () => {
   } = useChartDataStore();
 
   async function setupChart() {
-    const chart_periods = chartElements.map((e) => e.period);
-    const chart_budgets = chartElements.map((e) => e.budgets);
-    const chart_expenses = chartElements.map((e) => e.expenses);
-    const chart_deposits = chartElements.map((e) => e.deposits);
-
     const data = {
-      labels: chart_periods,
+      labels: chartElements?.periods,
       datasets: [
         {
           label: "Balance",
-          data: chart_budgets,
+          data: chartElements?.budgets,
           fill: false,
           borderColor: "rgba(52, 44, 255, 1)",
           pointBorderColor: "blue",
@@ -93,7 +88,7 @@ const DashboardPage: FunctionComponent = () => {
         },
         {
           label: "Expenses",
-          data: chart_expenses,
+          data: chartElements?.expenses,
           fill: false,
           borderColor: "rgba(235,74, 75, 1)",
           borderDash: [5, 5],
@@ -102,7 +97,7 @@ const DashboardPage: FunctionComponent = () => {
         },
         {
           label: "Deposits",
-          data: chart_deposits,
+          data: chartElements?.deposits,
           fill: false,
           borderColor: "rgba(82,233, 125, 1)",
           borderDash: [5, 5],

@@ -1,6 +1,6 @@
 import handleApiError from "@/config/apiErrorHandler";
 import { get, post, put, remove } from "@/config/axiosConfig";
-import { BalanceHistory } from "@prisma/client";
+import { BalanceHistory, User } from "@prisma/client";
 import { Item } from "@radix-ui/react-dropdown-menu";
 import { AxiosError } from "axios";
 import { create } from "zustand";
@@ -11,23 +11,15 @@ export interface MonthlyTransaction {
   type: number;
 }
 
-export interface Element {
-  amount: number;
-  period: string;
-}
-
-export interface ChartElement {
-  period: string;
-  budgets: number;
-  expenses: number;
-  deposits: number;
+export interface ChartElements {
+  periods: [] | null;
+  budgets: [] | null;
+  expenses: [] | null;
+  deposits: [] | null;
 }
 
 interface ChartDataStore {
-  // budgets: Element[];
-  // expenses: Element[];
-  // deposits: Element[];
-  chartElements: ChartElement[];
+  chartElements: ChartElements | null;
   monthlyTransactions: MonthlyTransaction[];
   chartDataLoading: boolean;
   chartDataError: string | null;
@@ -35,110 +27,86 @@ interface ChartDataStore {
 }
 
 const useChartDataStore = create<ChartDataStore>((set) => ({
-  // budgets: [],
-  // expenses: [],
-  // deposits: [],
-  chartElements: [],
+  chartElements: null,
   monthlyTransactions: [],
   chartDataLoading: false,
   chartDataError: null,
   getChartDataByUserId: async (userId) => {
     try {
       const originalBalanceResponse = await get(`/balance/${userId}`);
-      let balance: BalanceHistory = originalBalanceResponse.data;
+      let originalBalance: BalanceHistory = originalBalanceResponse.data;
 
-      const monthlyTransactionsResponse = await get(
-        `transactions/summary/monthly/${userId}`
-      );
-      let monthlyTransactions: MonthlyTransaction[] =
-        monthlyTransactionsResponse.data;
+      if (originalBalance) {
+        let userCreatedMonth = new Date(originalBalance.createdAt).getMonth()+1;
+        let userCreatedYear = new Date(originalBalance.createdAt).getFullYear();
 
-      let chartElements: ChartElement[] = [];
+        let originPeriod = `${userCreatedMonth}-${userCreatedYear}`;
 
-      if (monthlyTransactions.length > 0) {
-        const expenses: Element[] = monthlyTransactions.filter((obj) => {
-          return obj.type === 0;
-        });
+        let chartElements = {
+          periods: [originPeriod],
+          budgets: [originalBalance.balance],
+          expenses: null,
+          deposits: null
+        };
 
-        const deposits: Element[] = monthlyTransactions.filter((obj) => {
-          return obj.type === 1;
-        });
+        const monthlyTransactionsResponse = await get(
+          `transactions/summary/monthly/${userId}`
+        );
+        let monthlyTransactions: MonthlyTransaction[] = monthlyTransactionsResponse.data;
 
-        let temp: { [key: string]: number } = {};
-        const aggregatedMonthlyTransactions: MonthlyTransaction[] = [];
+        if (monthlyTransactions.length > 0) {
+          const originalBudget: MonthlyTransaction = {
+            period: originPeriod,
+            amount: originalBalance.balance,
+            type: 2
+          }
+          monthlyTransactions.push(originalBudget);
 
-        monthlyTransactions.forEach((element) => {
-          if (temp[element.period]) {
-            const index = temp[element.period] - 1;
-            const foundElement = aggregatedMonthlyTransactions[index];
-            let currentElementAmount = element.amount;
-            if (element.type === 0) {
-              currentElementAmount = currentElementAmount * -1;
+          const uniquePeriods = Array.from(new Set(monthlyTransactions.map((item: any) => item.period)));
+          const raw_expenses = monthlyTransactions.filter(item => item.type == 0);
+          const raw_deposits = monthlyTransactions.filter(item => item.type == 1);
+
+          const budgets = [];
+          const expenses = [];
+          const deposits = [];
+
+          let budget: number = originalBalance.balance;
+          let expense:number = 0;
+          let deposit: number = 0;
+
+          uniquePeriods.forEach((period) => {
+            if (raw_expenses.map((exp) => exp.period).includes(period)) {
+                expense = raw_expenses.find((e) => e.period === period
+                )!.amount;
+            } else {
+              expense = 0;
             }
-            let foundElementAmount = foundElement.amount;
-            if (foundElement.type === 0) {
-              foundElementAmount = foundElementAmount * -1;
+
+            if (raw_deposits.map((dep) => dep.period).includes(period)) {
+              deposit = raw_deposits.find((d) => d.period === period
+              )!.amount;
+            } else {
+              deposit = 0;
             }
-            const newElement = {
-              ...foundElement,
-              amount: currentElementAmount + foundElementAmount,
-            };
 
-            aggregatedMonthlyTransactions[index] = newElement;
-          } else {
-            temp[element.period] = aggregatedMonthlyTransactions.length + 1;
-            aggregatedMonthlyTransactions.push(element);
+            budget = budget + deposit - expense;
+
+            budgets.push(budget);
+            expenses.push(expense);
+            deposits.push(deposit);
+          });
+
+          chartElements = {
+            periods: uniquePeriods,
+            budgets: budgets,
+            expenses: expenses,
+            deposits: deposits
           }
-        });
-
-        var new_balance = balance.balance;
-        const budgets = aggregatedMonthlyTransactions.map(function (
-          transaction
-        ) {
-          new_balance = new_balance + transaction.amount;
-          return { period: transaction.period, amount: new_balance };
-        });
-
-        chartElements = budgets.map((element) => {
-          let element_expenses: number;
-          if (
-            expenses.map((expense) => expense.period).includes(element.period)
-          ) {
-            element_expenses = expenses.find(
-              (expense) => expense.period === element.period
-            )!.amount;
-          } else {
-            element_expenses = 0;
-          }
-
-          let element_deposits: number;
-          if (
-            deposits.map((deposit) => deposit.period).includes(element.period)
-          ) {
-            element_deposits = deposits.find(
-              (deposit) => deposit.period === element.period
-            )!.amount;
-          } else {
-            element_deposits = 0;
-          }
-
-          let newElement: ChartElement = {
-            period: element.period,
-            budgets: element.amount,
-            expenses: element_expenses,
-            deposits: element_deposits,
-          };
-
-          return newElement;
-        });
+        }
+        
+        set({ chartElements: chartElements });
+        set({ chartDataError: null, chartDataLoading: true });
       }
-
-      // set({ budgets: budgets });
-      // set({ expenses: expenses});
-      // set({ deposits: deposits});
-
-      set({ chartElements: chartElements });
-      set({ chartDataError: null, chartDataLoading: true });
     } catch (chartDataError) {
       const errorMessage = handleApiError(chartDataError as AxiosError);
       set({ chartDataError: errorMessage });

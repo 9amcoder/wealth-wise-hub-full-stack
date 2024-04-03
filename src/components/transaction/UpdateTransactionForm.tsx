@@ -189,7 +189,7 @@ const UpdateTransactionForm: React.FC<UpdateTransactionFormProps> = ({
                     timeFormat="HH:mm"
                     timeIntervals={15}
                     timeCaption={"Time"}
-                    minDate={new Date(registered_date)}
+                    // minDate={new Date(registered_date)}
                     maxDate={new Date()}
                   />
                 </FormControl>

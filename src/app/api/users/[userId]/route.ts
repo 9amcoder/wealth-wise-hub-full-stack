@@ -7,12 +7,12 @@ export async function GET(
     { params } : { params: { userId: string } }
 ){
     try {
-        const transactions = await prisma.user.findMany({
+        const user = await prisma.user.findUnique({
             where: {
                 clerkUserId: params.userId
             }
         });
-        return Response.json(transactions);
+        return Response.json(user);
     } catch (error) {
         console.error(error);
         return Response.error();
