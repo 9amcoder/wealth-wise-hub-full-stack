@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { encrypt } from "@/lib/utils";
 
 const prisma = new PrismaClient();
 
