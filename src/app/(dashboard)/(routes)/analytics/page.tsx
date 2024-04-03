@@ -128,9 +128,10 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     }
 
     // Calculate the percentage change
-    const balanceChange =
-      ((chartElements.at(-1)?.budgets) / chartElements.at(-2)?.budgets) *
-      100;
+    let previousMonthBudget = chartElements.at(-2)?.budgets;
+    let recentMonthBudget = chartElements.at(-1)?.budgets;
+
+    const balanceChange = ((recentMonthBudget - previousMonthBudget)/ previousMonthBudget) * 100;
 
     return balanceChange.toFixed(0);
   }, [chartElements]) as number; // The return type is number
@@ -144,9 +145,10 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     }
 
     // Calculate the percentage change
-    const expenseChange =
-      ((chartElements.at(-1)?.expenses) / chartElements.at(-2)?.expenses) *
-      100;
+    let previousMonthExpense = chartElements.at(-2)?.expenses;
+    let recentMonthExpense = chartElements.at(-1)?.expenses;
+
+    const expenseChange = ((recentMonthExpense - previousMonthExpense)/previousMonthExpense) * 100;
 
     return expenseChange.toFixed(0);
   }, [chartElements]) as number; // The return type is number
