@@ -1,5 +1,11 @@
 "use client";
-import React, { ChangeEvent, useEffect, useState, useMemo } from "react";
+import React, {
+  ChangeEvent,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,7 +20,7 @@ import {
   DialogContent,
   DialogTrigger,
   DialogFooter,
-  DialogClose
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -27,7 +33,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Wallet2, CircleDollarSign, Target, ArrowDownToDot, ArrowUpFromDot, RefreshCcw, Wallet, Pencil } from "lucide-react";
+import {
+  Wallet2,
+  CircleDollarSign,
+  Target,
+  ArrowDownToDot,
+  ArrowUpFromDot,
+  RefreshCcw,
+  Wallet,
+  Pencil,
+} from "lucide-react";
 import LineChartComponent from "@/components/ui/chart";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -38,8 +53,7 @@ import useGoalStore from "@/store/goalStore";
 import useBalanceStore from "@/store/balanceStore";
 import useChartDataStore from "@/store/chartDataStore";
 
-
-interface AnalyticPageProps { }
+interface AnalyticPageProps {}
 
 const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   const { user, isLoaded } = useUser();
@@ -49,12 +63,8 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   const [chartLoading, setChartLoading] = useState(true);
   const [insightLoading, setInsightLoading] = useState(true);
 
-  const {
-    goalLoading,
-    goalError,
-    goalByUserId,
-    getGoalByUserId
-  } = useGoalStore();
+  const { goalLoading, goalError, goalByUserId, getGoalByUserId } =
+    useGoalStore();
 
   const {
     currentBalanceLoading,
@@ -73,7 +83,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     getChartDataByUserId,
   } = useChartDataStore();
 
-  async function setupChart() {
+  const setupChart = useCallback(async () => {
     const chart_periods = chartElements.map((e) => e.period);
     const chart_budgets = chartElements.map((e) => e.budgets);
     const chart_expenses = chartElements.map((e) => e.expenses);
@@ -113,16 +123,19 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
 
     setChartData(data);
     setChartLoading(false);
-  }
+  }, [chartElements]);
 
   function redirectToInitialpage() {
     router.push(`initial`);
   }
 
-    const balanceChange = useMemo(() => {
+  const balanceChange = useMemo(() => {
     // Ensure the balances is not null and not zero to avoid division by zero
     if (
-      chartElements.length <= 0 || chartElements.at(-1)?.budgets == null || chartElements.at(-2)?.budgets == null || chartElements.at(-2)?.budgets == 0
+      chartElements.length <= 0 ||
+      chartElements.at(-1)?.budgets == null ||
+      chartElements.at(-2)?.budgets == null ||
+      chartElements.at(-2)?.budgets == 0
     ) {
       return 0;
     }
@@ -131,15 +144,23 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     let previousMonthBudget = chartElements.at(-2)?.budgets;
     let recentMonthBudget = chartElements.at(-1)?.budgets;
 
-    const balanceChange = ((recentMonthBudget - previousMonthBudget)/ previousMonthBudget) * 100;
+    // Check if recentMonthBudget and previousMonthBudget are not undefined before performing the calculation
+    if (recentMonthBudget !== undefined && previousMonthBudget !== undefined) {
+      const balanceChange =
+        ((recentMonthBudget - previousMonthBudget) / previousMonthBudget) * 100;
+      return balanceChange.toFixed(0);
+    }
 
-    return balanceChange.toFixed(0);
+    return 0;
   }, [chartElements]) as number; // The return type is number
 
   const expenseChange = useMemo(() => {
     // Ensure the balances is not null and not zero to avoid division by zero
     if (
-      chartElements.length <= 0 || chartElements.at(-1)?.expenses == null || chartElements.at(-2)?.expenses == null || chartElements.at(-2)?.expenses == 0
+      chartElements.length <= 0 ||
+      chartElements.at(-1)?.expenses == null ||
+      chartElements.at(-2)?.expenses == null ||
+      chartElements.at(-2)?.expenses == 0
     ) {
       return 0;
     }
@@ -148,9 +169,18 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     let previousMonthExpense = chartElements.at(-2)?.expenses;
     let recentMonthExpense = chartElements.at(-1)?.expenses;
 
-    const expenseChange = ((recentMonthExpense - previousMonthExpense)/previousMonthExpense) * 100;
+    // Check if recentMonthExpense and previousMonthExpense are not undefined before performing the calculation
+    if (
+      recentMonthExpense !== undefined &&
+      previousMonthExpense !== undefined
+    ) {
+      const expenseChange =
+        ((recentMonthExpense - previousMonthExpense) / previousMonthExpense) *
+        100;
+      return expenseChange.toFixed(0);
+    }
 
-    return expenseChange.toFixed(0);
+    return 0;
   }, [chartElements]) as number; // The return type is number
 
   // fetch data from the server (see app/api folder)
@@ -163,24 +193,30 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
           await getCurrentBalanceByUserId(user?.id || "");
           await getChartDataByUserId(user?.id || "");
           await setupChart();
-
-
         }
       } catch (error) {
         console.log(error);
       }
     };
     loadUserById();
-  }, [getOriginalBalanceByUserId, getCurrentBalanceByUserId, getGoalByUserId, getChartDataByUserId, user?.id, isLoaded]);
+  }, [
+    getOriginalBalanceByUserId,
+    getCurrentBalanceByUserId,
+    getGoalByUserId,
+    getChartDataByUserId,
+    user?.id,
+    isLoaded,
+    setupChart,
+  ]);
 
   const handleRefresh = async () => {
-    console.log("Refreshing...");
     await getCurrentBalanceByUserId(user?.id || "");
     await getChartDataByUserId(user?.id || "");
     await setupChart();
   };
 
-  if (goalLoading ||
+  if (
+    goalLoading ||
     originalBalanceLoading ||
     currentBalanceLoading ||
     chartDataLoading ||
@@ -189,21 +225,27 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     return <LoadingComponent />;
   } else if (!originalBalanceLoading && !goalLoading) {
     if (originalBalanceByUserId == null || goalByUserId == null) {
-      return <>
-        <AlertDialog open={true}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Balance and Goal have not been set</AlertDialogTitle>
-              <AlertDialogDescription>
-                Please setup balance and goal before using analytics feature.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogAction onClick={redirectToInitialpage}>Go</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </>
+      return (
+        <>
+          <AlertDialog open={true}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Balance and Goal have not been set
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Please setup balance and goal before using analytics feature.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction onClick={redirectToInitialpage}>
+                  Go
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+      );
     }
   }
 
@@ -215,7 +257,11 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     <div className="flex-1 space-y-4 p-8 pt-6">
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="bg-transparent">
-          <Button onClick={handleRefresh} variant="outline" className="w-full text-black">
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            className="w-full text-black"
+          >
             {" "}
             <RefreshCcw size={15} className="mr-2" />
             Refresh
@@ -247,7 +293,11 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                 <ArrowUpFromDot size={20} className="text-red-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-medium">${chartElements.at(-1)?.expenses > 0 ? chartElements.at(-1)?.expenses : 0}</div>
+                <div className="text-2xl font-medium">
+                  {chartElements.at(-1)?.expenses !== undefined
+                    ? chartElements.at(-1)?.expenses
+                    : 0}
+                </div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-r from-[#F0FEF6] to-[#CBFFDD]">
@@ -258,7 +308,12 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                 <ArrowDownToDot size={20} className="text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-medium">${chartElements.at(-1)?.deposits > 0 ? chartElements.at(-1)?.deposits : 0}</div>
+                <div className="text-2xl font-medium">
+                  $
+                  {chartElements.at(-1)?.deposits !== undefined
+                    ? chartElements.at(-1)?.deposits
+                    : 0}
+                </div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-r from-[#EEF5FF] to-[#CDE3FF]">
@@ -268,16 +323,26 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                 </CardTitle>
                 <Dialog>
                   <DialogTrigger asChild>
-                    <button><Pencil size={20} className="text-blue-600"></Pencil></button>
+                    <button>
+                      <Pencil size={20} className="text-blue-600"></Pencil>
+                    </button>
                   </DialogTrigger>
                   <DialogContent>
-                    <div>{goalByUserId && <GoalUpdateForm goal={goalByUserId} />}</div>
+                    <div>
+                      {goalByUserId && <GoalUpdateForm goal={goalByUserId} />}
+                    </div>
                   </DialogContent>
                 </Dialog>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-medium">${goalByUserId?.goalAmount}</div>
-                <div className="text-2xl font-medium">{new Date(goalByUserId?.goalDate || Date.now()).toLocaleDateString("en-CA")}</div>
+                <div className="text-2xl font-medium">
+                  ${goalByUserId?.goalAmount}
+                </div>
+                <div className="text-2xl font-medium">
+                  {new Date(
+                    goalByUserId?.goalDate || Date.now()
+                  ).toLocaleDateString("en-CA")}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -298,13 +363,37 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                 <CardTitle>Insights</CardTitle>
               </CardHeader>
               <CardContent>
-                  <div>
-                    <ul className="list-disc">
-                      {chartElements.length > 1 && <li>Balance has been {balanceChange == 0 ? 'unchanged' : balanceChange < 0 ? 'decreased' : 'increased' } at {Math.abs(balanceChange)}% from the previous month.</li>}
-                      {chartElements.length > 1 && <li><li>Expense was {expenseChange == 0 ? 'unchanged from' : expenseChange < 0 ? `${Math.abs(expenseChange)}% lower than` : `${Math.abs(expenseChange)}% higher than` } the previous month.</li></li>}  
-                      {chartElements.length <= 1 && <li>There is not enough information for insights.</li>}
-                    </ul>
-                  </div>
+                <div>
+                  <ul className="list-disc">
+                    {chartElements.length > 1 && (
+                      <li>
+                        Balance has been{" "}
+                        {balanceChange == 0
+                          ? "unchanged"
+                          : balanceChange < 0
+                          ? "decreased"
+                          : "increased"}{" "}
+                        at {Math.abs(balanceChange)}% from the previous month.
+                      </li>
+                    )}
+                    {chartElements.length > 1 && (
+                      <li>
+                        <li>
+                          Expense was{" "}
+                          {expenseChange == 0
+                            ? "unchanged from"
+                            : expenseChange < 0
+                            ? `${Math.abs(expenseChange)}% lower than`
+                            : `${Math.abs(expenseChange)}% higher than`}{" "}
+                          the previous month.
+                        </li>
+                      </li>
+                    )}
+                    {chartElements.length <= 1 && (
+                      <li>There is not enough information for insights.</li>
+                    )}
+                  </ul>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -313,6 +402,5 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     </div>
   );
 };
-
 
 export default AnalyticPage;
