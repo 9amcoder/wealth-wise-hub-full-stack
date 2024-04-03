@@ -1,5 +1,5 @@
 "use client";
-import { FunctionComponent, useEffect, useMemo, useState } from "react";
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -74,12 +74,12 @@ const DashboardPage: FunctionComponent = () => {
     getChartDataByUserId,
   } = useChartDataStore();
 
-  async function setupChart() {
+  const setupChart = useCallback(async () => {
     const chart_periods = chartElements.map((e) => e.period);
     const chart_budgets = chartElements.map((e) => e.budgets);
     const chart_expenses = chartElements.map((e) => e.expenses);
     const chart_deposits = chartElements.map((e) => e.deposits);
-
+  
     const data = {
       labels: chart_periods,
       datasets: [
@@ -111,10 +111,10 @@ const DashboardPage: FunctionComponent = () => {
         },
       ],
     };
-
+  
     setChartData(data);
     setChartLoading(false);
-  }
+  }, [chartElements]);
 
   function redirectToInitialpage() {
     router.push(`initial`);
@@ -137,7 +137,7 @@ const DashboardPage: FunctionComponent = () => {
       }
     };
     loadUserById();
-  }, [getGoalByUserId, getOriginalBalanceByUserId, getCurrentBalanceByUserId, getTransactionByUserId, user?.id, isLoaded,]);
+  }, [getGoalByUserId, getOriginalBalanceByUserId, getCurrentBalanceByUserId, getTransactionByUserId, user?.id, isLoaded, getChartDataByUserId, setupChart]);
 
   const expenses = useMemo(() => {
     if (transactionsByUserId === null) {
@@ -185,26 +185,8 @@ const DashboardPage: FunctionComponent = () => {
     return transactionsByUserId.length;
   }, [transactionsByUserId]);
 
-  // const change = useMemo(() => {
-  //   // Ensure the original balance is not null and not zero to avoid division by zero
-  //   if (
-  //     originalBalanceByUserId === null ||
-  //     originalBalanceByUserId.balance === 0
-  //   ) {
-  //     return 0;
-  //   }
-
-  //   // Calculate the percentage change
-  //   const change =
-  //     ((currentBalanceByUserId - originalBalanceByUserId.balance) /
-  //       originalBalanceByUserId.balance) *
-  //     100;
-
-  //   return change;
-  // }, [currentBalanceByUserId, originalBalanceByUserId]) as number; // The return type is number
 
   const handleRefresh = async () => {
-    console.log("Refreshing...");
     await getCurrentBalanceByUserId(user?.id || "");
     await getTransactionByUserId(user?.id || "");
     await getChartDataByUserId(user?.id || "");
