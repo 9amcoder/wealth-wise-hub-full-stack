@@ -24,11 +24,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  ArrowDownToDot,
-  ArrowUpFromDot,
   RefreshCcw,
   Wallet,
-  Wallet2, CircleDollarSign, Target, Banknote
+  CircleDollarSign, Target, Banknote
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import LineChartComponent from "@/components/ui/chart";
@@ -42,6 +40,7 @@ const DashboardPage: FunctionComponent = () => {
   const router = useRouter();
   const [chartData, setChartData] = useState({});
   const [chartLoading, setChartLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   const {
     balanceError,
@@ -114,8 +113,7 @@ const DashboardPage: FunctionComponent = () => {
   function redirectToInitialpage() {
     router.push(`initial`);
   }
-
-
+ 
   useEffect(() => {
     const loadUserById = async () => {
       try {
@@ -127,6 +125,7 @@ const DashboardPage: FunctionComponent = () => {
           await getTransactionByUserId(user?.id || "");
           await getChartDataByUserId(user?.id || "");
           await setupChart();
+          setDataLoaded(true); // set dataLoaded to true only after all operations are done
         }
       } catch (error) {
         console.log(error);

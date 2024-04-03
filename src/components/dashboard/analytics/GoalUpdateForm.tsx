@@ -43,7 +43,7 @@ type GoalUpdateFormComponentProps = { goal: GoalHistory }
 export default function GoalUpdateFormComponent({ goal }: GoalUpdateFormComponentProps) {
     const router = useRouter();
     const { user } = useUser();
-    const { goalLoading, goalError, updateGoal } = useGoalStore();
+    const { goalLoading, goalError, updateGoal, getGoalByUserId } = useGoalStore();
     const { toast } = useToast();
 
     const formSchema = z.object({
@@ -155,9 +155,9 @@ export default function GoalUpdateFormComponent({ goal }: GoalUpdateFormComponen
             if (!goalLoading) {
                 toast({
                     title: "Goal was updated successfully",
-                    duration: 5000,
+                    duration: 10000,
                 });
-                window.location.reload();
+                await getGoalByUserId(user?.id);
             }
         } catch (error) {
             console.log("error", error);

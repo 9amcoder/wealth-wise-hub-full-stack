@@ -81,7 +81,7 @@ const TransactionPage: React.FC = () => {
       <div className="mx-2 my-2">
         <Button
           variant="default"
-          onClick={() => router.push(`/addtransaction`)}
+          onClick={() => router.push(`/add-transaction`)}
         >
           Add New +
         </Button>
