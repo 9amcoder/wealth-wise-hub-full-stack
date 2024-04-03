@@ -1,4 +1,4 @@
-import { Boxes, Home, LayoutDashboard, UserCog, ImageUp } from "lucide-react";
+import { Boxes, Home, LayoutDashboard, UserCog, ImageDown } from "lucide-react";
 
 export const ROUTES = [
   {
@@ -15,15 +15,15 @@ export const ROUTES = [
   },
   {
     label: "Upload Receipts",
-    icon: Boxes,
+    icon: ImageDown,
     href: "/uploadreceipt",
-    color: "text-blue-500",
+    color: "text-orange-500",
   },
   {
     label: "Analytics",
     icon: LayoutDashboard,
     href: "/analytic",
-    color: "text-pink-700",
+    color: "text-green-700",
   },
   {
     label: "Accounts",
