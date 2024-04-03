@@ -16,13 +16,13 @@ export const ROUTES = [
   {
     label: "Upload Receipts",
     icon: ImageDown,
-    href: "/uploadreceipt",
+    href: "/upload-receipt",
     color: "text-orange-500",
   },
   {
     label: "Analytics",
     icon: LayoutDashboard,
-    href: "/analytic",
+    href: "/analytics",
     color: "text-green-700",
   },
   {

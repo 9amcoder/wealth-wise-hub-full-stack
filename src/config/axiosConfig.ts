@@ -6,7 +6,7 @@ const API_URL_REMOTE =
   "https://wealth-wise-hub-full-stack.vercel.app/api";
 
 const API = axios.create({
-  baseURL: API_URL_REMOTE,
+  baseURL: API_URL_LOCAL,
   headers: {
     "Content-Type": "application/json",
   },
