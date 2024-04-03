@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { addTransactionSchema } from "@/components/transaction/AddTransactionForm";
 
 interface ExtractedText {
   title: string;
@@ -33,15 +34,6 @@ interface ExtractedText {
   transactionDate: Date;
   transactionType: number;
 }
-
-export const addTransactionSchema = z.object({
-  id: z.string().optional(),
-  title: z.string().min(1, { message: "must be 1 character long" }).max(255),
-  amount: z.number().positive(),
-  transactionDate: z.union([z.date(), z.string()]),
-  userId: z.string(),
-  transactionType: z.number().min(0).max(1),
-});
 
 const UploadReceiptPage: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<any>();
