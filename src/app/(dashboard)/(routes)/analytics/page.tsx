@@ -1,5 +1,11 @@
 "use client";
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, {
+  ChangeEvent,
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,12 +15,39 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Wallet2, CircleDollarSign, Target } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Wallet2,
+  CircleDollarSign,
+  Target,
+  ArrowDownToDot,
+  ArrowUpFromDot,
+  RefreshCcw,
+  Wallet,
+  Pencil,
+} from "lucide-react";
 import LineChartComponent from "@/components/ui/chart";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import LoadingComponent from "@/components/dashboard/Loading";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GoalUpdateForm from "@/components/dashboard/analytics/GoalUpdateForm";
 import useGoalStore from "@/store/goalStore";
 import useBalanceStore from "@/store/balanceStore";
@@ -35,8 +68,11 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
 
   const {
     currentBalanceLoading,
+    originalBalanceLoading,
     balanceError,
     currentBalanceByUserId,
+    originalBalanceByUserId,
+    getOriginalBalanceByUserId,
     getCurrentBalanceByUserId,
   } = useBalanceStore();
 
@@ -47,54 +83,116 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     getChartDataByUserId,
   } = useChartDataStore();
 
+  const setupChart = useCallback(async () => {
+    const chart_periods = chartElements.map((e) => e.period);
+    const chart_budgets = chartElements.map((e) => e.budgets);
+    const chart_expenses = chartElements.map((e) => e.expenses);
+    const chart_deposits = chartElements.map((e) => e.deposits);
+
+    const data = {
+      labels: chart_periods,
+      datasets: [
+        {
+          label: "Balance",
+          data: chart_budgets,
+          fill: false,
+          borderColor: "rgba(52, 44, 255, 1)",
+          pointBorderColor: "blue",
+          tension: 0.1,
+        },
+        {
+          label: "Expenses",
+          data: chart_expenses,
+          fill: false,
+          borderColor: "rgba(235,74, 75, 1)",
+          borderDash: [5, 5],
+          pointBorderColor: "red",
+          tension: 0.1,
+        },
+        {
+          label: "Deposits",
+          data: chart_deposits,
+          fill: false,
+          borderColor: "rgba(82,233, 125, 1)",
+          borderDash: [5, 5],
+          pointBorderColor: "green",
+          tension: 0.1,
+        },
+      ],
+    };
+
+    setChartData(data);
+    setChartLoading(false);
+  }, [chartElements]);
+
+  function redirectToInitialpage() {
+    router.push(`initial`);
+  }
+
+  const balanceChange = useMemo(() => {
+    // Ensure the balances is not null and not zero to avoid division by zero
+    if (
+      chartElements.length <= 0 ||
+      chartElements.at(-1)?.budgets == null ||
+      chartElements.at(-2)?.budgets == null ||
+      chartElements.at(-2)?.budgets == 0
+    ) {
+      return 0;
+    }
+
+    // Calculate the percentage change
+    let previousMonthBudget = chartElements.at(-2)?.budgets;
+    let recentMonthBudget = chartElements.at(-1)?.budgets;
+
+    // Check if recentMonthBudget and previousMonthBudget are not undefined before performing the calculation
+    if (recentMonthBudget !== undefined && previousMonthBudget !== undefined) {
+      const balanceChange =
+        ((recentMonthBudget - previousMonthBudget) / previousMonthBudget) * 100;
+      return balanceChange.toFixed(0);
+    }
+
+    return 0;
+  }, [chartElements]) as number; // The return type is number
+
+  const expenseChange = useMemo(() => {
+    // Ensure the balances is not null and not zero to avoid division by zero
+    if (
+      chartElements.length <= 0 ||
+      chartElements.at(-1)?.expenses == null ||
+      chartElements.at(-2)?.expenses == null ||
+      chartElements.at(-2)?.expenses == 0
+    ) {
+      return 0;
+    }
+
+    // Calculate the percentage change
+    let previousMonthExpense = chartElements.at(-2)?.expenses;
+    let recentMonthExpense = chartElements.at(-1)?.expenses;
+
+    // Check if recentMonthExpense and previousMonthExpense are not undefined before performing the calculation
+    if (
+      recentMonthExpense !== undefined &&
+      previousMonthExpense !== undefined
+    ) {
+      const expenseChange =
+        ((recentMonthExpense - previousMonthExpense) / previousMonthExpense) *
+        100;
+      return expenseChange.toFixed(0);
+    }
+
+    return 0;
+  }, [chartElements]) as number; // The return type is number
+
   // fetch data from the server (see app/api folder)
   useEffect(() => {
     const loadUserById = async () => {
       try {
         if (isLoaded) {
-          await getCurrentBalanceByUserId(user?.id || "");
+          await getOriginalBalanceByUserId(user?.id || "");
           await getGoalByUserId(user?.id || "");
+          await getCurrentBalanceByUserId(user?.id || "");
           await getChartDataByUserId(user?.id || "");
-
-          const chart_periods = chartElements.map((e) => e.period);
-          const chart_budgets = chartElements.map((e) => e.budgets);
-          const chart_expenses = chartElements.map((e) => e.expenses);
-          const chart_deposits = chartElements.map((e) => e.deposits);
-
-          const data = {
-            labels: chart_periods,
-            datasets: [
-              {
-                label: "Budget",
-                data: chart_budgets,
-                fill: false,
-                borderColor: "rgba(52, 44, 255, 1)",
-                pointBorderColor: "blue",
-                tension: 0.1,
-              },
-              {
-                label: "Expenses",
-                data: chart_expenses,
-                fill: false,
-                borderColor: "rgba(235,74, 75, 1)",
-                borderDash: [5, 5],
-                pointBorderColor: "red",
-                tension: 0.1,
-              },
-              {
-                label: "Deposits",
-                data: chart_deposits,
-                fill: false,
-                borderColor: "rgba(191,214, 65, 1)",
-                borderDash: [5, 5],
-                pointBorderColor: "green",
-                tension: 0.1,
-              },
-            ],
-          };
-
-          setChartData(data);
-          setChartLoading(false);
+          await setupChart();
         }
       } catch (error) {
         console.log(error);
@@ -102,132 +200,205 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     };
     loadUserById();
   }, [
+    getOriginalBalanceByUserId,
     getCurrentBalanceByUserId,
     getGoalByUserId,
-    setChartData,
-    setChartLoading,
+    getChartDataByUserId,
     user?.id,
     isLoaded,
-    getChartDataByUserId,
-    chartElements,
+    setupChart,
   ]);
+
+  const handleRefresh = async () => {
+    await getCurrentBalanceByUserId(user?.id || "");
+    await getChartDataByUserId(user?.id || "");
+    await setupChart();
+  };
 
   if (
     goalLoading ||
+    originalBalanceLoading ||
     currentBalanceLoading ||
     chartDataLoading ||
     chartLoading
   ) {
     return <LoadingComponent />;
+  } else if (!originalBalanceLoading && !goalLoading) {
+    if (originalBalanceByUserId == null || goalByUserId == null) {
+      return (
+        <>
+          <AlertDialog open={true}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Balance and Goal have not been set
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Please setup balance and goal before using analytics feature.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction onClick={redirectToInitialpage}>
+                  Go
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+      );
+    }
   }
 
-  if (goalError) {
-    return <div> Error: {goalError}</div>;
-  }
-
-  if (balanceError) {
-    return <div> Error: {balanceError}</div>;
-  }
-
-  if (chartDataError) {
-    return <div> Error: {balanceError}</div>;
-  }
-
-  async function getInsights() {
-    setInsightLoading(false);
-    setInsights("Generated Insights");
+  if (balanceError || goalError || chartDataError) {
+    return <div>Error: {balanceError || goalError || chartDataError}</div>;
   }
 
   return (
-    <div className="p-3 grid gap-2 m-[2]">
-      <Card>
-        <div className="p-2 grid grid-cols-2 divide-x divide-gray-300">
-          <CardContent>
-            <div className="col-span-1 ">
-              <div className="m-3 grid grid-cols-3 gap-1">
-                <div className="col-span-1 flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-[#F5DA91] to-[#FFCC99]">
-                  <Wallet2
-                    className="p-2 align-items: flex-start"
-                    size={50}
-                    color="#804908"
-                  />
+    <div className="flex-1 space-y-4 p-8 pt-6">
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="bg-transparent">
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            className="w-full text-black"
+          >
+            {" "}
+            <RefreshCcw size={15} className="mr-2" />
+            Refresh
+          </Button>
+        </TabsList>
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="bg-gradient-to-r from-[#F6F0E2] to-[#FFF2CD]">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-base font-medium text-yellow-600 font-bold">
+                  Total Balance
+                </CardTitle>
+                <Wallet size={20} className="text-yellow-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-medium">
+                  ${currentBalanceByUserId}
                 </div>
-                <div className="p-3 col-span-1 align-items: center flex flex-col">
-                  <h2>Balance</h2>
-                  <h3 className="pt-3 text-gray-10">
-                    ${currentBalanceByUserId}
-                  </h3>
+                <p className="text-xs text-muted-foreground">
+                  {/* {change}% changes from original balance */}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="bg-gradient-to-r from-[#FFF2F2] to-[#FFD9D9]">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-base font-medium text-red-600 font-bold">
+                  Recent Month Expenses
+                </CardTitle>
+                <ArrowUpFromDot size={20} className="text-red-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-medium">
+                  {chartElements.at(-1)?.expenses !== undefined
+                    ? chartElements.at(-1)?.expenses
+                    : 0}
                 </div>
-              </div>
-            </div>
-          </CardContent>
-          <CardContent>
-            <div className="col-span-1 ">
-              <div className="m-3 grid grid-cols-3 gap-1">
-                <div className="col-span-1 flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-[#ffe6e6] to-[#ff9999]">
-                  <Target
-                    className="p-2 align-items: flex-start"
-                    size={50}
-                    color="#ff4d4d"
-                  />
+              </CardContent>
+            </Card>
+            <Card className="bg-gradient-to-r from-[#F0FEF6] to-[#CBFFDD]">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-base font-medium text-green-600 font-bold">
+                  Recent Month Deposit
+                </CardTitle>
+                <ArrowDownToDot size={20} className="text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-medium">
+                  $
+                  {chartElements.at(-1)?.deposits !== undefined
+                    ? chartElements.at(-1)?.deposits
+                    : 0}
                 </div>
-                <div className="p-3 col-span-1 align-items: center flex flex-col">
-                  <h2>Goals</h2>
-                  <h3 className="text-gray-10">${goalByUserId?.goalAmount}</h3>
-                  <h2 className="pt-3 text-gray-10">Target Date</h2>
-                  <h3 className="text-gray-10">
-                    {new Date(
-                      goalByUserId?.goalDate || Date.now()
-                    ).toLocaleDateString("en-CA")}
-                  </h3>
+              </CardContent>
+            </Card>
+            <Card className="bg-gradient-to-r from-[#EEF5FF] to-[#CDE3FF]">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-base font-medium text-blue-600 font-bold">
+                  Goal
+                </CardTitle>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button>
+                      <Pencil size={20} className="text-blue-600"></Pencil>
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <div>
+                      {goalByUserId && <GoalUpdateForm goal={goalByUserId} />}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-medium">
+                  ${goalByUserId?.goalAmount}
                 </div>
-                <div className="col-span-1 flex flex-row-reverse">
-                  <div className="grid gap-4 py-4">
-                    {goalByUserId && <GoalUpdateForm goal={goalByUserId} />}
-                  </div>
+                <div className="text-2xl font-medium">
+                  {new Date(
+                    goalByUserId?.goalDate || Date.now()
+                  ).toLocaleDateString("en-CA")}
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </div>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Insights</CardTitle>
-        </CardHeader>
-        <div className="p-2 grid grid-cols-2 divide-x divide-gray-300">
-          <CardContent>
-            <div className="col-span-1">
-              <LineChartComponent
-                data={chartData}
-                options={{ maintainAspectRatio: false }}
-              />
-            </div>
-          </CardContent>
-          <CardContent>
-            <div className="col-span-1 ">
-              <div className="grid gap-4 items-center justify-center">
-                {insightLoading ? (
-                  <Button
-                    className="text-[#282458] w-[100px]"
-                    variant="outline"
-                    type="button"
-                    onClick={async () => {
-                      await getInsights();
-                    }}
-                  >
-                    More
-                  </Button>
-                ) : !insights ? (
-                  <LoadingComponent />
-                ) : (
-                  <div>{insights}</div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </div>
-      </Card>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <Card className="col-span-4">
+              <CardHeader>
+                <CardTitle>Statistics</CardTitle>
+              </CardHeader>
+              <CardContent className="pl-2">
+                <LineChartComponent
+                  data={chartData}
+                  options={{ maintainAspectRatio: false }}
+                />
+              </CardContent>
+            </Card>
+            <Card className="col-span-3">
+              <CardHeader>
+                <CardTitle>Insights</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <ul className="list-disc">
+                    {chartElements.length > 1 && (
+                      <li>
+                        Balance has been{" "}
+                        {balanceChange == 0
+                          ? "unchanged"
+                          : balanceChange < 0
+                          ? "decreased"
+                          : "increased"}{" "}
+                        at {Math.abs(balanceChange)}% from the previous month.
+                      </li>
+                    )}
+                    {chartElements.length > 1 && (
+                      <li>
+                        <li>
+                          Expense was{" "}
+                          {expenseChange == 0
+                            ? "unchanged from"
+                            : expenseChange < 0
+                            ? `${Math.abs(expenseChange)}% lower than`
+                            : `${Math.abs(expenseChange)}% higher than`}{" "}
+                          the previous month.
+                        </li>
+                      </li>
+                    )}
+                    {chartElements.length <= 1 && (
+                      <li>There is not enough information for insights.</li>
+                    )}
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

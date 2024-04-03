@@ -15,13 +15,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import {
-    Dialog,
-    DialogContent,
-    DialogTrigger,
-    DialogFooter,
-    DialogClose
-} from "@/components/ui/dialog"
-import {
     Form,
     FormControl,
     FormField,
@@ -31,7 +24,7 @@ import {
     FormDescription
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { Calendar as CalendarIcon, Pencil } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
@@ -80,82 +73,74 @@ export default function GoalUpdateFormComponent({ goal }: GoalUpdateFormComponen
 
     const cardDescription = "Make changes to your goal here. Click save when you're done."
     return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button variant="outline" type="button">Update</Button>
-            </DialogTrigger>
-            <DialogContent>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                        <Card className="w-[460px] border-hidden">
-                            <CardHeader>
-                                <CardTitle>Update goal</CardTitle>
-                                <CardDescription>{cardDescription}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <FormField control={form.control} name="target_amount" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-[#282458]">Target Amount</FormLabel>
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <Card className="w-[460px] border-hidden">
+                    <CardHeader>
+                        <CardTitle>Update goal</CardTitle>
+                        <CardDescription>{cardDescription}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <FormField control={form.control} name="target_amount" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[#282458]">Target Amount</FormLabel>
+                                <FormControl>
+                                    <Input type="number" {...field} onChange={(e) => {
+                                        field.onChange(parseFloat(e.target.value));
+                                    }} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        <br />
+                        <FormField control={form.control} name="target_date" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-[#282458]">Target Date</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
                                         <FormControl>
-                                            <Input type="number" {...field} onChange={(e) => {
-                                                field.onChange(parseFloat(e.target.value));
-                                            }} />
+                                            <Button
+                                                variant={"outline"}
+                                                className={cn(
+                                                    "w-[410px] pl-3 text-left font-normal",
+                                                    !field.value && "text-muted-foreground"
+                                                )}
+                                            >
+                                                {field.value ? (
+                                                    format(field.value, "PPP")
+                                                ) : (
+                                                    <span>Pick a date</span>
+                                                )}
+                                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                            </Button>
                                         </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                                <br />
-                                <FormField control={form.control} name="target_date" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-[#282458]">Target Date</FormLabel>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <FormControl>
-                                                    <Button
-                                                        variant={"outline"}
-                                                        className={cn(
-                                                            "w-[410px] pl-3 text-left font-normal",
-                                                            !field.value && "text-muted-foreground"
-                                                        )}
-                                                    >
-                                                        {field.value ? (
-                                                            format(field.value, "PPP")
-                                                        ) : (
-                                                            <span>Pick a date</span>
-                                                        )}
-                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                    </Button>
-                                                </FormControl>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={field.value}
-                                                    onSelect={field.onChange}
-                                                    disabled={(date) => date <= new Date()}
-                                                    initialFocus
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                            </CardContent>
-                            <CardFooter>
-                                <DialogClose>
-                                    <Button className="text-[#282458]" variant="outline" type="submit">Save changes</Button>
-                                </DialogClose>
-                            </CardFooter>
-                        </Card>
-                        {goalError && (
-                            <FormDescription className="text-red-600">
-                                Error: {goalError}
-                            </FormDescription>
-                        )}
-                    </form>
-                </Form>
-            </DialogContent>
-        </Dialog>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={field.value}
+                                            onSelect={field.onChange}
+                                            disabled={(date) => date <= new Date()}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                                
+                            </FormItem>
+                        )} />
+                    </CardContent>
+                    <CardFooter>
+                        <Button className="text-[#282458]" variant="outline" type="submit">Save changes</Button>
+                    </CardFooter>
+                </Card>
+                {goalError && (
+                    <FormDescription className="text-red-600">
+                        Error: {goalError}
+                    </FormDescription>
+                )}
+            </form>
+        </Form>
     );
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -172,7 +157,7 @@ export default function GoalUpdateFormComponent({ goal }: GoalUpdateFormComponen
                     title: "Goal was updated successfully",
                     duration: 5000,
                 });
-                router.push(`/analytics`);
+                window.location.reload();
             }
         } catch (error) {
             console.log("error", error);
