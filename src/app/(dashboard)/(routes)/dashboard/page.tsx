@@ -229,7 +229,7 @@ const DashboardPage: FunctionComponent = () => {
             <Card className="bg-gray-100">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Total Balance
+                  Current Balance
                 </CardTitle>
                 <Wallet size={20} />
               </CardHeader>
@@ -272,6 +272,7 @@ const DashboardPage: FunctionComponent = () => {
                   data={chartData}
                   options={{ maintainAspectRatio: false }}
                 />
+                <div className="text-sm">{`(*)`} Note: Only transactions occurs after balance and goal set up are being used.</div>
               </CardContent>
             </Card>
             <Card className="col-span-3">
