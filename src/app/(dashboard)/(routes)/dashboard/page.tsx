@@ -1,11 +1,5 @@
 "use client";
-import {
-  FunctionComponent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -32,9 +26,7 @@ import {
 import {
   RefreshCcw,
   Wallet,
-  CircleDollarSign,
-  Target,
-  Banknote,
+  CircleDollarSign, Target, Banknote
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import LineChartComponent from "@/components/ui/chart";
@@ -46,6 +38,8 @@ import useChartDataStore from "@/store/chartDataStore";
 const DashboardPage: FunctionComponent = () => {
   const { user, isLoaded } = useUser();
   const router = useRouter();
+  const [initalSetupLoading, setInitalSetupLoading] = useState(true);
+  const [showInitalAlert, setShowInitalAlert] = useState(false);
   const [chartData, setChartData] = useState({});
   const [chartLoading, setChartLoading] = useState(true);
 
@@ -56,7 +50,7 @@ const DashboardPage: FunctionComponent = () => {
     currentBalanceLoading,
     originalBalanceLoading,
     getCurrentBalanceByUserId,
-    getOriginalBalanceByUserId,
+    getOriginalBalanceByUserId
   } = useBalanceStore();
 
   const {
@@ -66,8 +60,12 @@ const DashboardPage: FunctionComponent = () => {
     getTransactionByUserId,
   } = useTransactionStore();
 
-  const { goalLoading, goalError, goalByUserId, getGoalByUserId } =
-    useGoalStore();
+  const {
+    goalLoading,
+    goalError,
+    goalByUserId,
+    getGoalByUserId
+  } = useGoalStore();
 
   const {
     chartDataLoading,
@@ -82,79 +80,87 @@ const DashboardPage: FunctionComponent = () => {
 
   // This useEffect is for loading user data
   useEffect(() => {
-    const loadUserById = async () => {
-      try {
-        if (isLoaded) {
-          console.log("isLoaded");
-          await getOriginalBalanceByUserId(user?.id || "");
-          await getGoalByUserId(user?.id || "");
+      const loadInitalSetup = async () => {
+        try {
+          if (isLoaded) {
+            await getOriginalBalanceByUserId(user?.id || "");
+            await getGoalByUserId(user?.id || "");
+            setInitalSetupLoading(false);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      };
+      loadInitalSetup();
+  }, [getGoalByUserId, getOriginalBalanceByUserId, user?.id, isLoaded]);
+ 
+  // This useEffect is for loading user data
+useEffect(() => {
+  const loadUserById = async () => {
+    try {
+      if (!initalSetupLoading && !goalLoading && !originalBalanceLoading) {
+        if (goalByUserId && originalBalanceByUserId) {
           await getCurrentBalanceByUserId(user?.id || "");
           await getTransactionByUserId(user?.id || "");
           await getChartDataByUserId(user?.id || "");
+          setShowInitalAlert(false);
+        } else {
+          setShowInitalAlert(true);
         }
-      } catch (error) {
-        console.log(error);
       }
-    };
-    loadUserById();
-  }, [
-    getGoalByUserId,
-    getOriginalBalanceByUserId,
-    getCurrentBalanceByUserId,
-    getTransactionByUserId,
-    getChartDataByUserId,
-    user?.id,
-    isLoaded,
-  ]);
-
-  // This useEffect is for setting up the chart
-  useEffect(() => {
-    if (chartElements) {
-      const setupChart = () => {
-        const data = {
-          labels: chartElements?.periods,
-          datasets: [
-            {
-              label: "Balance",
-              data: chartElements?.budgets,
-              fill: false,
-              borderColor: "rgba(52, 44, 255, 1)",
-              pointBorderColor: "blue",
-              tension: 0.1,
-            },
-            {
-              label: "Expenses",
-              data: chartElements?.expenses,
-              fill: false,
-              borderColor: "rgba(235,74, 75, 1)",
-              borderDash: [5, 5],
-              pointBorderColor: "red",
-              tension: 0.1,
-            },
-            {
-              label: "Deposits",
-              data: chartElements?.deposits,
-              fill: false,
-              borderColor: "rgba(82,233, 125, 1)",
-              borderDash: [5, 5],
-              pointBorderColor: "green",
-              tension: 0.1,
-            },
-          ],
-        };
-
-        setChartData(data);
-        setChartLoading(false);
-      };
-
-      setupChart();
+    } catch (error) {
+      console.log(error);
     }
-  }, [chartElements]);
+  };
+  loadUserById();
+}, [getCurrentBalanceByUserId, getTransactionByUserId, getChartDataByUserId, initalSetupLoading, goalLoading, originalBalanceLoading, goalByUserId, currentBalanceByUserId]);
+
+// This useEffect is for setting up the chart
+useEffect(() => {
+  if (chartElements) {
+    const setupChart = () => {
+      const data = {
+        labels: chartElements?.periods,
+        datasets: [
+          {
+            label: "Balance",
+            data: chartElements?.budgets,
+            fill: false,
+            borderColor: "rgba(52, 44, 255, 1)",
+            pointBorderColor: "blue",
+            tension: 0.1,
+          },
+          {
+            label: "Expenses",
+            data: chartElements?.expenses,
+            fill: false,
+            borderColor: "rgba(235,74, 75, 1)",
+            borderDash: [5, 5],
+            pointBorderColor: "red",
+            tension: 0.1,
+          },
+          {
+            label: "Deposits",
+            data: chartElements?.deposits,
+            fill: false,
+            borderColor: "rgba(82,233, 125, 1)",
+            borderDash: [5, 5],
+            pointBorderColor: "green",
+            tension: 0.1,
+          },
+        ],
+      };
+    
+      setChartData(data);
+      setChartLoading(false);
+    };
+
+    setupChart();
+  }
+}, [chartElements]);
 
   const expenses = useMemo(() => {
-    // Check if transactionsByUserId is an array
-    if (!Array.isArray(transactionsByUserId)) {
-      console.error("transactionsByUserId is not an array");
+    if (transactionsByUserId === null) {
       return 0;
     }
 
@@ -173,9 +179,7 @@ const DashboardPage: FunctionComponent = () => {
   }, [transactionsByUserId]);
 
   const income = useMemo(() => {
-    // Check if transactionsByUserId is an array
-    if (!Array.isArray(transactionsByUserId)) {
-      console.error("transactionsByUserId is not an array");
+    if (transactionsByUserId === null) {
       return 0;
     }
 
@@ -201,64 +205,44 @@ const DashboardPage: FunctionComponent = () => {
     return transactionsByUserId.length;
   }, [transactionsByUserId]);
 
+
   const handleRefresh = async () => {
     await getCurrentBalanceByUserId(user?.id || "");
     await getTransactionByUserId(user?.id || "");
     await getChartDataByUserId(user?.id || "");
   };
 
-  if (
-    currentBalanceLoading ||
-    loading ||
-    !isLoaded ||
-    originalBalanceLoading ||
-    chartDataLoading ||
-    chartLoading
-  ) {
-    return <LoadingComponent />;
-  } else if (!originalBalanceLoading && !goalLoading) {
-    if (originalBalanceByUserId == null || goalByUserId == null) {
-      return (
-        <>
-          <AlertDialog open={true}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  Balance and Goal have not been set
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  Please setup balance and goal before begin your journey.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogAction onClick={redirectToInitialpage}>
-                  Go
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </>
-      );
-    }
+  if(showInitalAlert) {
+    return <>
+      <AlertDialog open={true}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Balance and Goal have not been set</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please setup balance and goal before begin your journey.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={redirectToInitialpage}>Go</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  }
+
+  if (currentBalanceLoading || loading || !isLoaded || originalBalanceLoading || chartDataLoading || chartLoading || initalSetupLoading) {
+      return <LoadingComponent />;
   }
 
   if (balanceError || transactionError || chartDataError) {
-    return (
-      <>
-        <div>Error: {balanceError || transactionError || chartDataError}</div>
-      </>
-    );
+    return <><div>Error: {balanceError || transactionError || chartDataError}</div></>;
   }
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="bg-transparent">
-          <Button
-            onClick={handleRefresh}
-            variant="outline"
-            className="w-full text-black"
-          >
+          <Button onClick={handleRefresh} variant="outline" className="w-full text-black">
             {" "}
             <RefreshCcw size={15} className="mr-2" />
             Refresh
@@ -312,10 +296,7 @@ const DashboardPage: FunctionComponent = () => {
                   data={chartData}
                   options={{ maintainAspectRatio: false }}
                 />
-                <div className="text-sm">
-                  {`(*)`} Note: Only transactions occurs after balance and goal
-                  set up are being used.
-                </div>
+                <div className="text-sm">{`(*)`} Note: Only transactions occurs after balance and goal set up are being used.</div>
               </CardContent>
             </Card>
             <Card className="col-span-3">
@@ -324,22 +305,19 @@ const DashboardPage: FunctionComponent = () => {
                 <CardDescription>Total: {totalTransactions}</CardDescription>
               </CardHeader>
               <CardContent>
-                {Array.isArray(transactionsByUserId) ? (
-                  transactionsByUserId.map((transaction: Transaction) => (
+                {(transactionsByUserId || []).map(
+                  (transaction: Transaction) => (
                     <div
                       key={transaction.id}
-                      className={`flex flex-row justify-between ${
-                        transaction.transactionType === 0
+                      className={`flex flex-row justify-between ${transaction.transactionType === 0
                           ? "text-red-500"
                           : "text-green-500"
-                      }`}
+                        }`}
                     >
                       <div className="text-sm">{transaction.title}</div>
                       <div className="text-sm">${transaction.amount}</div>
                     </div>
-                  ))
-                ) : (
-                  <div>No transactions found</div>
+                  )
                 )}
               </CardContent>
             </Card>
