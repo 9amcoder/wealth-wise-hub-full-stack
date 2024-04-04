@@ -12,10 +12,10 @@ export interface MonthlyTransaction {
 }
 
 export interface ChartElements {
-  periods: string[] | null;
-  budgets: number[] | null;
-  expenses: number[] | null;
-  deposits: number[] | null;
+  periods: string[];
+  budgets: number[];
+  expenses: number[];
+  deposits: number[];
 }
 
 interface ChartDataStore {
@@ -67,17 +67,29 @@ const useChartDataStore = create<ChartDataStore>((set) => ({
         monthlyTransactions.push(originalBudget);
   
         const uniquePeriods = Array.from(new Set(monthlyTransactions.map((item: MonthlyTransaction) => item.period)));
-  
+
+        let budget = originalBalance.balance;
+        
         const { budgets, expenses, deposits } = uniquePeriods.reduce<{ budgets: number[], expenses: number[], deposits: number[] }>((acc, period) => {
           const expense = monthlyTransactions.find(item => item.type === 0 && item.period === period)?.amount || 0;
           const deposit = monthlyTransactions.find(item => item.type === 1 && item.period === period)?.amount || 0;
-        
-          acc.budgets.push(acc.budgets[acc.budgets.length - 1] + deposit - expense);
+          
+          budget = budget + deposit - expense;
+
+          // if (period == originPeriod) {
+          //   acc.budgets.push(budget);
+          //   budget = budget + deposit - expense;
+          // } else {
+          //   budget = budget + deposit - expense;
+          //   acc.budgets.push(budget);
+          // }
+          
+          acc.budgets.push(budget)
           acc.expenses.push(expense);
           acc.deposits.push(deposit);
         
           return acc;
-        }, { budgets: [originalBalance.balance], expenses: [], deposits: [] });
+        }, { budgets: [], expenses: [], deposits: [] });
   
         chartElements = {
           periods: uniquePeriods,
