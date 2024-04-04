@@ -217,7 +217,7 @@ const UploadReceiptPage: React.FC = () => {
       <div className="w-full md:w-3/4 lg:w-full px-4 py-2 mt-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-[#282458]">Upload Invoice</CardTitle>
+            <CardTitle className="text-[#282458]">Upload Receipt</CardTitle>
           </CardHeader>
           <CardContent>
             <form>

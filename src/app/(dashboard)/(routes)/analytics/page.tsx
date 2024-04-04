@@ -42,6 +42,7 @@ import {
   RefreshCcw,
   Wallet,
   Pencil,
+  Banknote
 } from "lucide-react";
 import LineChartComponent from "@/components/ui/chart";
 import { useUser } from "@clerk/nextjs";
@@ -254,7 +255,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
             <Card className="bg-gradient-to-r from-[#F6F0E2] to-[#FFF2CD]">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-base font-medium text-yellow-600 font-bold">
-                  Total Balance
+                  Current Balance
                 </CardTitle>
                 <Wallet size={20} className="text-yellow-600" />
               </CardHeader>
@@ -272,7 +273,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                 <CardTitle className="text-base font-medium text-red-600 font-bold">
                   Recent Month Expenses
                 </CardTitle>
-                <ArrowUpFromDot size={20} className="text-red-600" />
+                <CircleDollarSign size={20} className="text-red-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-medium">${(chartElements?.expenses && chartElements?.expenses?.length > 0) ? chartElements?.expenses?.at(-1) : 0}</div>
@@ -281,9 +282,9 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
             <Card className="bg-gradient-to-r from-[#F0FEF6] to-[#CBFFDD]">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-base font-medium text-green-600 font-bold">
-                  Recent Month Deposit
+                  Recent Month Income/Deposit
                 </CardTitle>
-                <ArrowDownToDot size={20} className="text-green-600" />
+                <Banknote size={20} className="text-green-600" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-medium">${(chartElements?.deposits && chartElements?.deposits?.length > 0) ? chartElements?.deposits?.at(-1) : 0}</div>
@@ -330,7 +331,6 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                   options={{ maintainAspectRatio: false }}
                 />
                 <div></div>
-                <div className="text-sm">Note: Only transactions occurs after balance and goal set up are being used.</div>
               </CardContent>
             </Card>
             <Card className="col-span-3">
@@ -350,6 +350,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
           </div>
         </TabsContent>
       </Tabs>
+      <div className="text-sm">{`(*)`} Note: Only transactions occurs after balance and goal set up are being used.</div>
     </div>
   );
 };
