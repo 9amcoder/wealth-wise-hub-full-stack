@@ -132,29 +132,29 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     ) {
       return 0;
     }
-
+  
     // Calculate the percentage change
     let previousMonthBudget = parseFloat(chartElements.budgets.at(-2)!.toFixed(5));
     let recentMonthBudget = parseFloat(chartElements.budgets.at(-1)!.toFixed(5));
-
-    // Check if recentMonthBudget and previousMonthBudget are not undefined before performing the calculation
-    if (recentMonthBudget !== undefined && previousMonthBudget !== undefined) {
+  
+    // Check if recentMonthBudget and previousMonthBudget are not NaN before performing the calculation
+    if (!isNaN(recentMonthBudget) && !isNaN(previousMonthBudget)) {
       let isChange = 'No change';
-
+  
       if (recentMonthBudget < previousMonthBudget) {
         isChange = 'Decreased';
       } else if (recentMonthBudget > previousMonthBudget) {
         isChange = 'Increased';
       }
-
+  
       const bchange = (Math.abs(previousMonthBudget - recentMonthBudget)/ Math.abs(previousMonthBudget)) * 100;
-
+  
       const balanceChange = {change: isChange, percentage: Math.round(bchange)}
       return balanceChange;
     }
-
+  
     return 0;
-  }, [chartElements]) as {change: string; percentage: number}; // The return type is custom change
+  }, [chartElements]) as {change: string; percentage: number}; 
 
   const expenseChange = useMemo(() => {
     // Ensure the balances is not null and not zero to avoid division by zero
@@ -168,10 +168,10 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     let previousMonthExpense: number = parseFloat(chartElements.expenses.at(-2)!.toFixed(5));
     let recentMonthExpense: number = parseFloat(chartElements.expenses.at(-1)!.toFixed(5));
 
-    // Check if recentMonthExpense and previousMonthExpense are not undefined before performing the calculation
+    // Check if recentMonthExpense and previousMonthExpense are not NaN before performing the calculation
     if (
-      recentMonthExpense !== undefined &&
-      previousMonthExpense !== undefined
+      !isNaN(recentMonthExpense) &&
+      !isNaN(previousMonthExpense)
     ) {
       let isChange = 'No change';
 
@@ -188,7 +188,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     }
 
     return 0;
-  }, [chartElements]) as {change: string; percentage: number}; // The return type is custom change 
+  }, [chartElements]) as {change: string; percentage: number}; 
 
   const depositChange = useMemo(() => {
     // Ensure the balances is not null and not zero to avoid division by zero
@@ -197,32 +197,29 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     ) {
       return 0;
     }
-
+  
     // Calculate the percentage change
     let previousMonthDeposit = parseFloat(chartElements.deposits.at(-2)!.toFixed(5));
     let recentMonthDeposit = parseFloat(chartElements.deposits.at(-1)!.toFixed(5));
-
-    // Check if recentMonthDeposit and previousMonthDeposit are not undefined before performing the calculation
-    if (
-      recentMonthDeposit !== undefined &&
-      previousMonthDeposit !== undefined
-    ) {
+  
+    // Check if recentMonthDeposit and previousMonthDeposit are not NaN before performing the calculation
+    if (!isNaN(recentMonthDeposit) && !isNaN(previousMonthDeposit)) {
       let isChange = 'No change';
-
+  
       if (recentMonthDeposit < previousMonthDeposit) {
         isChange = 'Decreased';
       } else if (recentMonthDeposit > previousMonthDeposit) {
         isChange = 'Increased';
       }
-
+  
       const dchange = (Math.abs(previousMonthDeposit - recentMonthDeposit)/ Math.abs(previousMonthDeposit)) * 100;
-
+  
       const depositChange = {change: isChange, percentage: Math.round(dchange)}
       return depositChange;
     }
-
-  return 0;
-}, [chartElements]) as {change: string; percentage: number}; // The return type is custom change
+  
+    return 0;
+  }, [chartElements]) as {change: string; percentage: number};  
 
 
   // This useEffect is for loading user data

@@ -73,15 +73,18 @@ const useChartDataStore = create<ChartDataStore>((set) => ({
         const { budgets, expenses, deposits } = uniquePeriods.reduce<{ budgets: number[], expenses: number[], deposits: number[] }>((acc, period) => {
           const expense = monthlyTransactions.find(item => item.type === 0 && item.period === period)?.amount || 0;
           const deposit = monthlyTransactions.find(item => item.type === 1 && item.period === period)?.amount || 0;
-
-          if (period == originPeriod) {
-            acc.budgets.push(budget);
-            budget = budget + deposit - expense;
-          } else {
-            budget = budget + deposit - expense;
-            acc.budgets.push(budget);
-          }
           
+          budget = budget + deposit - expense;
+
+          // if (period == originPeriod) {
+          //   acc.budgets.push(budget);
+          //   budget = budget + deposit - expense;
+          // } else {
+          //   budget = budget + deposit - expense;
+          //   acc.budgets.push(budget);
+          // }
+          
+          acc.budgets.push(budget)
           acc.expenses.push(expense);
           acc.deposits.push(deposit);
         
