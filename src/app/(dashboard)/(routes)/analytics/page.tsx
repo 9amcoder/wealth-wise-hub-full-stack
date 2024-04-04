@@ -59,10 +59,10 @@ interface AnalyticPageProps {}
 const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   const { user, isLoaded } = useUser();
   const router = useRouter();
-  const [insights, setInsights] = useState("");
+  const [initalSetupLoading, setInitalSetupLoading] = useState(true);
+  const [showInitalAlert, setShowInitalAlert] = useState(false);
   const [chartData, setChartData] = useState({});
   const [chartLoading, setChartLoading] = useState(true);
-  const [insightLoading, setInsightLoading] = useState(true);
 
   const { goalLoading, goalError, goalByUserId, getGoalByUserId } =
     useGoalStore();
@@ -172,23 +172,85 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     return 0;
   }, [chartElements]) as number; // The return type is number
 
-  // fetch data from the server (see app/api folder)
+  // This useEffect is for loading user data
   useEffect(() => {
-    const loadUserById = async () => {
+    const loadInitalSetup = async () => {
       try {
         if (isLoaded) {
           await getOriginalBalanceByUserId(user?.id || "");
           await getGoalByUserId(user?.id || "");
-          await getCurrentBalanceByUserId(user?.id || "");
-          await getChartDataByUserId(user?.id || "");
-          await setupChart();
+          setInitalSetupLoading(false);
         }
       } catch (error) {
         console.log(error);
       }
     };
-    loadUserById();
-  }, [getOriginalBalanceByUserId, getCurrentBalanceByUserId, getGoalByUserId, getChartDataByUserId, user?.id, isLoaded, setupChart]);
+    loadInitalSetup();
+}, [getGoalByUserId, getOriginalBalanceByUserId, user?.id, isLoaded]);
+
+// This useEffect is for loading user data
+useEffect(() => {
+const loadUserById = async () => {
+  try {
+    if (!initalSetupLoading && !goalLoading && !originalBalanceLoading) {
+      if (goalByUserId && originalBalanceByUserId) {
+        await getCurrentBalanceByUserId(user?.id || "");
+        await getChartDataByUserId(user?.id || "");
+        setShowInitalAlert(false);
+      } else {
+        setShowInitalAlert(true);
+      }
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+loadUserById();
+}, [getCurrentBalanceByUserId, getChartDataByUserId, initalSetupLoading, goalLoading, originalBalanceLoading, goalByUserId, currentBalanceByUserId]);
+
+// This useEffect is for setting up the chart
+useEffect(() => {
+if (chartElements) {
+  const setupChart = () => {
+    const data = {
+      labels: chartElements?.periods,
+      datasets: [
+        {
+          label: "Balance",
+          data: chartElements?.budgets,
+          fill: false,
+          borderColor: "rgba(52, 44, 255, 1)",
+          pointBorderColor: "blue",
+          tension: 0.1,
+        },
+        {
+          label: "Expenses",
+          data: chartElements?.expenses,
+          fill: false,
+          borderColor: "rgba(235,74, 75, 1)",
+          borderDash: [5, 5],
+          pointBorderColor: "red",
+          tension: 0.1,
+        },
+        {
+          label: "Deposits",
+          data: chartElements?.deposits,
+          fill: false,
+          borderColor: "rgba(82,233, 125, 1)",
+          borderDash: [5, 5],
+          pointBorderColor: "green",
+          tension: 0.1,
+        },
+      ],
+    };
+  
+    setChartData(data);
+    setChartLoading(false);
+  };
+
+  setupChart();
+}
+}, [chartElements]);
 
   const handleRefresh = async () => {
     await getOriginalBalanceByUserId(user?.id || "");
@@ -198,39 +260,28 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     await setupChart();
   };
 
-  if (
-    goalLoading ||
-    originalBalanceLoading ||
-    currentBalanceLoading ||
-    chartDataLoading ||
-    chartLoading
-  ) {
-    return <LoadingComponent />;
-  } else if (!originalBalanceLoading && !goalLoading) {
-    if (originalBalanceByUserId == null || goalByUserId == null) {
-      return (
-        <>
-          <AlertDialog open={true}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  Balance and Goal have not been set
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  Please setup balance and goal before using analytics feature.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogAction onClick={redirectToInitialpage}>
-                  Go
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </>
-      );
-    }
+  if(showInitalAlert) {
+    return <>
+      <AlertDialog open={true}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Balance and Goal have not been set</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please setup balance and goal before begin your journey.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={redirectToInitialpage}>Go</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   }
+
+  if (currentBalanceLoading || !isLoaded || originalBalanceLoading || chartDataLoading || chartLoading || initalSetupLoading) {
+    return <LoadingComponent />;
+  }
+
 
   if (balanceError || goalError || chartDataError) {
     return <div>Error: {balanceError || goalError || chartDataError}</div>;

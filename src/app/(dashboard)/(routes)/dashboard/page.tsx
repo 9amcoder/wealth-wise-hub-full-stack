@@ -38,6 +38,8 @@ import useChartDataStore from "@/store/chartDataStore";
 const DashboardPage: FunctionComponent = () => {
   const { user, isLoaded } = useUser();
   const router = useRouter();
+  const [initalSetupLoading, setInitalSetupLoading] = useState(true);
+  const [showInitalAlert, setShowInitalAlert] = useState(false);
   const [chartData, setChartData] = useState({});
   const [chartLoading, setChartLoading] = useState(true);
 
@@ -75,25 +77,43 @@ const DashboardPage: FunctionComponent = () => {
   function redirectToInitialpage() {
     router.push(`initial`);
   }
+
+  // This useEffect is for loading user data
+  useEffect(() => {
+      const loadInitalSetup = async () => {
+        try {
+          if (isLoaded) {
+            await getOriginalBalanceByUserId(user?.id || "");
+            await getGoalByUserId(user?.id || "");
+            setInitalSetupLoading(false);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      };
+      loadInitalSetup();
+  }, [getGoalByUserId, getOriginalBalanceByUserId, user?.id, isLoaded]);
  
   // This useEffect is for loading user data
 useEffect(() => {
   const loadUserById = async () => {
     try {
-      if (isLoaded) {
-        console.log("isLoaded");
-        await getOriginalBalanceByUserId(user?.id || "");
-        await getGoalByUserId(user?.id || "");
-        await getCurrentBalanceByUserId(user?.id || "");
-        await getTransactionByUserId(user?.id || "");
-        await getChartDataByUserId(user?.id || "");
+      if (!initalSetupLoading && !goalLoading && !originalBalanceLoading) {
+        if (goalByUserId && originalBalanceByUserId) {
+          await getCurrentBalanceByUserId(user?.id || "");
+          await getTransactionByUserId(user?.id || "");
+          await getChartDataByUserId(user?.id || "");
+          setShowInitalAlert(false);
+        } else {
+          setShowInitalAlert(true);
+        }
       }
     } catch (error) {
       console.log(error);
     }
   };
   loadUserById();
-}, [getGoalByUserId, getOriginalBalanceByUserId, getCurrentBalanceByUserId, getTransactionByUserId, getChartDataByUserId, user?.id, isLoaded]);
+}, [getCurrentBalanceByUserId, getTransactionByUserId, getChartDataByUserId, initalSetupLoading, goalLoading, originalBalanceLoading, goalByUserId, currentBalanceByUserId]);
 
 // This useEffect is for setting up the chart
 useEffect(() => {
@@ -192,26 +212,26 @@ useEffect(() => {
     await getChartDataByUserId(user?.id || "");
   };
 
-  if (currentBalanceLoading || loading || !isLoaded || originalBalanceLoading || chartDataLoading || chartLoading) {
-    return <LoadingComponent />;
-  } else if (!originalBalanceLoading && !goalLoading) {
-    if (originalBalanceByUserId == null || goalByUserId == null) {
-      return <>
-        <AlertDialog open={true}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Balance and Goal have not been set</AlertDialogTitle>
-              <AlertDialogDescription>
-                Please setup balance and goal before begin your journey.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogAction onClick={redirectToInitialpage}>Go</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </>
-    }
+  if(showInitalAlert) {
+    return <>
+      <AlertDialog open={true}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Balance and Goal have not been set</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please setup balance and goal before begin your journey.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={redirectToInitialpage}>Go</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  }
+
+  if (currentBalanceLoading || loading || !isLoaded || originalBalanceLoading || chartDataLoading || chartLoading || initalSetupLoading) {
+      return <LoadingComponent />;
   }
 
   if (balanceError || transactionError || chartDataError) {
