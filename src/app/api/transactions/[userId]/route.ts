@@ -24,7 +24,7 @@ export async function GET(
 
         // Check if transactions are found for the given user
         if (transactions.length === 0) {
-            return Response.json({ message: 'No transactions found for the given user' });
+            return Response.json(transactions);
         }
     
         const decryptedTransaction = transactions.map((element: { title: string, [key: string]: any }) => {
