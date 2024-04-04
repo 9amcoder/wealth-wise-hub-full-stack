@@ -42,7 +42,7 @@ import {
   RefreshCcw,
   Wallet,
   Pencil,
-  Banknote
+  Banknote,
 } from "lucide-react";
 import LineChartComponent from "@/components/ui/chart";
 import { useUser } from "@clerk/nextjs";
@@ -54,7 +54,7 @@ import useGoalStore from "@/store/goalStore";
 import useBalanceStore from "@/store/balanceStore";
 import useChartDataStore from "@/store/chartDataStore";
 
-interface AnalyticPageProps { }
+interface AnalyticPageProps {}
 
 const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   const { user, isLoaded } = useUser();
@@ -128,30 +128,46 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   const balanceChange = useMemo(() => {
     // Ensure the balances is not null and not zero to avoid division by zero
     if (
-      (chartElements?.budgets && chartElements?.budgets?.length <= 0) || chartElements?.budgets?.at(-1) == null || chartElements?.budgets?.at(-2) == null || chartElements?.budgets?.at(-2) == 0
+      (chartElements?.budgets && chartElements?.budgets?.length <= 0) ||
+      chartElements?.budgets?.at(-1) == null ||
+      chartElements?.budgets?.at(-2) == null ||
+      chartElements?.budgets?.at(-2) == 0
     ) {
       return null;
     }
 
     // Calculate the percentage change
-    let previousMonthBudget = parseFloat(chartElements.budgets.at(-2)!.toFixed(5));
-    let recentMonthBudget = parseFloat(chartElements.budgets.at(-1)!.toFixed(5));
+    let previousMonthBudget = parseFloat(
+      chartElements.budgets.at(-2)!.toFixed(5)
+    );
+    let recentMonthBudget = parseFloat(
+      chartElements.budgets.at(-1)!.toFixed(5)
+    );
 
     // Check if recentMonthBudget and previousMonthBudget are not undefined before performing the calculation
     // Check if recentMonthBudget and previousMonthBudget are not NaN before performing the calculation
     if (!isNaN(recentMonthBudget) && !isNaN(previousMonthBudget)) {
-      let isChange = `no change`; 
+      let isChange = `no change`;
       let bchange = 0;
 
       if (recentMonthBudget < previousMonthBudget) {
         isChange = `decreased`;
-        bchange = (Math.abs(previousMonthBudget - recentMonthBudget) / Math.abs(previousMonthBudget)) * 100;
+        bchange =
+          (Math.abs(previousMonthBudget - recentMonthBudget) /
+            Math.abs(previousMonthBudget)) *
+          100;
       } else if (recentMonthBudget > previousMonthBudget) {
         isChange = `increased`;
-        bchange = (Math.abs(recentMonthBudget - previousMonthBudget) / Math.abs(recentMonthBudget)) * 100;
+        bchange =
+          (Math.abs(recentMonthBudget - previousMonthBudget) /
+            Math.abs(recentMonthBudget)) *
+          100;
       }
 
-      const balanceChange = { change: isChange, percentage: Math.round(bchange) }
+      const balanceChange = {
+        change: isChange,
+        percentage: Math.round(bchange),
+      };
       return balanceChange;
     }
 
@@ -161,7 +177,10 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   const expenseChange = useMemo(() => {
     // Ensure the balances is not null and not zero to avoid division by zero
     if (
-      (chartElements?.expenses && chartElements?.expenses?.length <= 0) || chartElements?.expenses?.at(-1) == null || chartElements?.expenses?.at(-2) == null || chartElements?.expenses?.at(-2) == 0
+      (chartElements?.expenses && chartElements?.expenses?.length <= 0) ||
+      chartElements?.expenses?.at(-1) == null ||
+      chartElements?.expenses?.at(-2) == null ||
+      chartElements?.expenses?.at(-2) == 0
     ) {
       return null;
     }
@@ -169,24 +188,37 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     // Calculate the percentage change
     console.log(chartElements.expenses.at(-2)!.toFixed(5));
     console.log(chartElements.expenses.at(-1)!.toFixed(5));
-    let previousMonthExpense: number = parseFloat(chartElements.expenses.at(-2)!.toFixed(5));
-    let recentMonthExpense: number = parseFloat(chartElements.expenses.at(-1)!.toFixed(5));
+    let previousMonthExpense: number = parseFloat(
+      chartElements.expenses.at(-2)!.toFixed(5)
+    );
+    let recentMonthExpense: number = parseFloat(
+      chartElements.expenses.at(-1)!.toFixed(5)
+    );
 
     // Check if recentMonthExpense and previousMonthExpense are not undefined before performing the calculation
     if (!isNaN(recentMonthExpense) && !isNaN(previousMonthExpense)) {
       let isChange = `no change`;
       let echange = 0;
- 
+
       if (recentMonthExpense < previousMonthExpense) {
         isChange = `lower`;
-        echange = (Math.abs(previousMonthExpense-recentMonthExpense)/Math.abs(previousMonthExpense))*100;
+        echange =
+          (Math.abs(previousMonthExpense - recentMonthExpense) /
+            Math.abs(previousMonthExpense)) *
+          100;
       } else if (recentMonthExpense > previousMonthExpense) {
         isChange = `higher`;
-        echange = (Math.abs(recentMonthExpense-previousMonthExpense)/Math.abs(recentMonthExpense))*100;
+        echange =
+          (Math.abs(recentMonthExpense - previousMonthExpense) /
+            Math.abs(recentMonthExpense)) *
+          100;
       }
-      console.log(echange)
+      console.log(echange);
 
-      const expenseChange = { change: isChange, percentage: Math.round(echange) }
+      const expenseChange = {
+        change: isChange,
+        percentage: Math.round(echange),
+      };
       return expenseChange;
     }
 
@@ -196,14 +228,21 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   const depositChange = useMemo(() => {
     // Ensure the balances is not null and not zero to avoid division by zero
     if (
-      (chartElements?.deposits && chartElements?.deposits?.length <= 0) || chartElements?.deposits?.at(-1) == null || chartElements?.deposits?.at(-2) == null || chartElements?.deposits?.at(-2) == 0
+      (chartElements?.deposits && chartElements?.deposits?.length <= 0) ||
+      chartElements?.deposits?.at(-1) == null ||
+      chartElements?.deposits?.at(-2) == null ||
+      chartElements?.deposits?.at(-2) == 0
     ) {
       return null;
     }
 
     // Calculate the percentage change
-    let previousMonthDeposit = parseFloat(chartElements.deposits.at(-2)!.toFixed(5));
-    let recentMonthDeposit = parseFloat(chartElements.deposits.at(-1)!.toFixed(5));
+    let previousMonthDeposit = parseFloat(
+      chartElements.deposits.at(-2)!.toFixed(5)
+    );
+    let recentMonthDeposit = parseFloat(
+      chartElements.deposits.at(-1)!.toFixed(5)
+    );
 
     // Check if recentMonthDeposit and previousMonthDeposit are not NaN before performing the calculation
     if (!isNaN(recentMonthDeposit) && !isNaN(previousMonthDeposit)) {
@@ -212,13 +251,22 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
 
       if (recentMonthDeposit < previousMonthDeposit) {
         isChange = `decreased`;
-        dchange = (Math.abs(previousMonthDeposit - recentMonthDeposit) / Math.abs(previousMonthDeposit)) * 100;
+        dchange =
+          (Math.abs(previousMonthDeposit - recentMonthDeposit) /
+            Math.abs(previousMonthDeposit)) *
+          100;
       } else if (recentMonthDeposit > previousMonthDeposit) {
         isChange = `increased`;
-        dchange = (Math.abs(recentMonthDeposit - previousMonthDeposit) / Math.abs(recentMonthDeposit)) * 100;
+        dchange =
+          (Math.abs(recentMonthDeposit - previousMonthDeposit) /
+            Math.abs(recentMonthDeposit)) *
+          100;
       }
 
-      const depositChange = { change: isChange, percentage: Math.round(dchange) }
+      const depositChange = {
+        change: isChange,
+        percentage: Math.round(dchange),
+      };
       return depositChange;
     }
 
@@ -260,7 +308,15 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
       }
     };
     loadUserById();
-  }, [getCurrentBalanceByUserId, getChartDataByUserId, initalSetupLoading, goalLoading, originalBalanceLoading, goalByUserId, currentBalanceByUserId]);
+  }, [
+    getCurrentBalanceByUserId,
+    getChartDataByUserId,
+    initalSetupLoading,
+    goalLoading,
+    originalBalanceLoading,
+    goalByUserId,
+    currentBalanceByUserId,
+  ]);
 
   // This useEffect is for setting up the chart
   useEffect(() => {
@@ -315,27 +371,39 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   };
 
   if (showInitalAlert) {
-    return <>
-      <AlertDialog open={true}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Balance and Goal have not been set</AlertDialogTitle>
-            <AlertDialogDescription>
-              Please setup balance and goal before begin your journey.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={redirectToInitialpage}>Go</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    return (
+      <>
+        <AlertDialog open={true}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Balance and Goal have not been set
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Please setup balance and goal before begin your journey.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={redirectToInitialpage}>
+                Go
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    );
   }
 
-  if (currentBalanceLoading || !isLoaded || originalBalanceLoading || chartDataLoading || chartLoading || initalSetupLoading) {
+  if (
+    currentBalanceLoading ||
+    !isLoaded ||
+    originalBalanceLoading ||
+    chartDataLoading ||
+    chartLoading ||
+    initalSetupLoading
+  ) {
     return <LoadingComponent />;
   }
-
 
   if (balanceError || goalError || chartDataError) {
     return <div>Error: {balanceError || goalError || chartDataError}</div>;
@@ -366,7 +434,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-medium">
-                  ${currentBalanceByUserId}
+                  ${currentBalanceByUserId.toFixed(2)}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {/* {change}% changes from original balance */}
@@ -413,9 +481,10 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                   </DialogContent>
                 </Dialog>
               </CardHeader>
+
               <CardContent>
                 <div className="text-2xl font-medium">
-                  ${goalByUserId?.goalAmount}
+                  ${goalByUserId?.goalAmount.toFixed(2)}
                 </div>
                 <div className="text-2xl font-medium">
                   {new Date(
@@ -445,10 +514,49 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
               <CardContent>
                 <div>
                   <ul className="list-disc">
-                    {(chartElements?.periods && chartElements?.periods?.length > 1) && balanceChange &&  <li>Balance {balanceChange.change === `no change` ? `did not change` : `has ${balanceChange.change} ${Math.abs(balanceChange.percentage)}% `} from the previous month.</li>}
-                    {(chartElements?.periods && chartElements?.periods?.length > 1) && expenseChange && <li>Expense was {expenseChange.change === `no change` ? `unchanged from` : `${Math.abs(expenseChange.percentage)}% ${expenseChange.change} than`} the previous month.</li>}
-                    {(chartElements?.periods && chartElements?.periods?.length > 1) && depositChange && <li>Deposit has {depositChange.change === `no change` ? `unchanged from` : `${depositChange.change} ${Math.abs(depositChange.percentage)}% from`} the previous month.</li>}
-                    {(chartElements?.periods && chartElements?.periods?.length <= 1) && <li>There is not enough information for insights.</li>}
+                    {chartElements?.periods &&
+                      chartElements?.periods?.length > 1 &&
+                      balanceChange && (
+                        <li>
+                          Balance{" "}
+                          {balanceChange.change === `no change`
+                            ? `did not change`
+                            : `has ${balanceChange.change} ${Math.abs(
+                                balanceChange.percentage
+                              )}% `}{" "}
+                          from the previous month.
+                        </li>
+                      )}
+                    {chartElements?.periods &&
+                      chartElements?.periods?.length > 1 &&
+                      expenseChange && (
+                        <li>
+                          Expense was{" "}
+                          {expenseChange.change === `no change`
+                            ? `unchanged from`
+                            : `${Math.abs(expenseChange.percentage)}% ${
+                                expenseChange.change
+                              } than`}{" "}
+                          the previous month.
+                        </li>
+                      )}
+                    {chartElements?.periods &&
+                      chartElements?.periods?.length > 1 &&
+                      depositChange && (
+                        <li>
+                          Deposit has{" "}
+                          {depositChange.change === `no change`
+                            ? `unchanged from`
+                            : `${depositChange.change} ${Math.abs(
+                                depositChange.percentage
+                              )}% from`}{" "}
+                          the previous month.
+                        </li>
+                      )}
+                    {chartElements?.periods &&
+                      chartElements?.periods?.length <= 1 && (
+                        <li>There is not enough information for insights.</li>
+                      )}
                   </ul>
                 </div>
               </CardContent>
@@ -456,7 +564,10 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
           </div>
         </TabsContent>
       </Tabs>
-      <div className="text-sm">{`(*)`} Note: Only transactions occurs after balance and goal set up are being used.</div>
+      <div className="text-sm">
+        {`(*)`} Note: Only transactions occurs after balance and goal set up are
+        being used.
+      </div>
     </div>
   );
 };

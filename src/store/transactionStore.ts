@@ -66,9 +66,7 @@ const useTransactionStore = create<TransactionStore>((set) => ({
   addTransaction: async (transaction) => {
     set({ transactionError: null, loading: true });
     try {
-      console.log("transaction: ", transaction);
       const response = await post("/transactions", transaction);
-      console.log(response.data);
       set({ transactions: response.data });
     } catch (transactionError) {
       const errorMessage = handleApiError(transactionError as AxiosError);

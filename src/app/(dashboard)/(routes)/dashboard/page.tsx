@@ -259,7 +259,7 @@ useEffect(() => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ${currentBalanceByUserId}
+                ${currentBalanceByUserId.toFixed(2)}
                 </div>
               </CardContent>
             </Card>
@@ -271,7 +271,7 @@ useEffect(() => {
                 <CircleDollarSign size={20} className="text-red-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${expenses}</div>
+              <div className="text-2xl font-bold">${expenses.toFixed(2)}</div>
               </CardContent>
             </Card>
             <Card className="bg-green-50">
@@ -282,7 +282,7 @@ useEffect(() => {
                 <Banknote size={20} className="text-green-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${income}</div>
+              <div className="text-2xl font-bold">${income.toFixed(2)}</div>
               </CardContent>
             </Card>
           </div>
