@@ -134,18 +134,27 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     }
 
     // Calculate the percentage change
-    let previousMonthBudget = chartElements?.budgets?.at(-2);
-    let recentMonthBudget = chartElements?.budgets?.at(-1);
+    let previousMonthBudget = parseFloat(chartElements.budgets.at(-2)!.toFixed(5));
+    let recentMonthBudget = parseFloat(chartElements.budgets.at(-1)!.toFixed(5));
 
     // Check if recentMonthBudget and previousMonthBudget are not undefined before performing the calculation
     if (recentMonthBudget !== undefined && previousMonthBudget !== undefined) {
-      const balanceChange = ((previousMonthBudget - recentMonthBudget)/ previousMonthBudget) * 100;
+      let isChange = 'No change';
 
-      return Math.round(balanceChange);
+      if (recentMonthBudget < previousMonthBudget) {
+        isChange = 'Decreased';
+      } else if (recentMonthBudget > previousMonthBudget) {
+        isChange = 'Increased';
+      }
+
+      const bchange = (Math.abs(previousMonthBudget - recentMonthBudget)/ Math.abs(previousMonthBudget)) * 100;
+
+      const balanceChange = {change: isChange, percentage: Math.round(bchange)}
+      return balanceChange;
     }
 
     return 0;
-  }, [chartElements]) as number; // The return type is number
+  }, [chartElements]) as {change: string; percentage: number}; // The return type is custom change
 
   const expenseChange = useMemo(() => {
     // Ensure the balances is not null and not zero to avoid division by zero
@@ -156,21 +165,65 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
     }
 
     // Calculate the percentage change
-    let previousMonthExpense = chartElements?.expenses?.at(-2);
-    let recentMonthExpense = chartElements?.expenses?.at(-1);
+    let previousMonthExpense: number = parseFloat(chartElements.expenses.at(-2)!.toFixed(5));
+    let recentMonthExpense: number = parseFloat(chartElements.expenses.at(-1)!.toFixed(5));
 
     // Check if recentMonthExpense and previousMonthExpense are not undefined before performing the calculation
     if (
       recentMonthExpense !== undefined &&
       previousMonthExpense !== undefined
     ) {
-      const expenseChange = ((previousMonthExpense - recentMonthExpense)/previousMonthExpense) * 100;
+      let isChange = 'No change';
 
-      return Math.round(expenseChange);
+      if (recentMonthExpense < previousMonthExpense) {
+        isChange = 'Decreased';
+      } else if (recentMonthExpense > previousMonthExpense) {
+        isChange = 'Increased';
+      }
+
+      const echange = (Math.abs(previousMonthExpense - recentMonthExpense)/ Math.abs(previousMonthExpense)) * 100;
+
+      const expenseChange = {change: isChange, percentage: Math.round(echange)}
+      return expenseChange;
     }
 
     return 0;
-  }, [chartElements]) as number; // The return type is number
+  }, [chartElements]) as {change: string; percentage: number}; // The return type is custom change 
+
+  const depositChange = useMemo(() => {
+    // Ensure the balances is not null and not zero to avoid division by zero
+    if (
+      (chartElements?.deposits && chartElements?.deposits?.length <= 0 )|| chartElements?.deposits?.at(-1) == null || chartElements?.deposits?.at(-2) == null || chartElements?.deposits?.at(-2) == 0
+    ) {
+      return 0;
+    }
+
+    // Calculate the percentage change
+    let previousMonthDeposit = parseFloat(chartElements.deposits.at(-2)!.toFixed(5));
+    let recentMonthDeposit = parseFloat(chartElements.deposits.at(-1)!.toFixed(5));
+
+    // Check if recentMonthDeposit and previousMonthDeposit are not undefined before performing the calculation
+    if (
+      recentMonthDeposit !== undefined &&
+      previousMonthDeposit !== undefined
+    ) {
+      let isChange = 'No change';
+
+      if (recentMonthDeposit < previousMonthDeposit) {
+        isChange = 'Decreased';
+      } else if (recentMonthDeposit > previousMonthDeposit) {
+        isChange = 'Increased';
+      }
+
+      const dchange = (Math.abs(previousMonthDeposit - recentMonthDeposit)/ Math.abs(previousMonthDeposit)) * 100;
+
+      const depositChange = {change: isChange, percentage: Math.round(dchange)}
+      return depositChange;
+    }
+
+  return 0;
+}, [chartElements]) as {change: string; percentage: number}; // The return type is custom change
+
 
   // This useEffect is for loading user data
   useEffect(() => {
@@ -253,11 +306,9 @@ if (chartElements) {
 }, [chartElements]);
 
   const handleRefresh = async () => {
-    await getOriginalBalanceByUserId(user?.id || "");
     await getGoalByUserId(user?.id || "");
     await getCurrentBalanceByUserId(user?.id || "");
     await getChartDataByUserId(user?.id || "");
-    await setupChart();
   };
 
   if(showInitalAlert) {
@@ -315,7 +366,7 @@ if (chartElements) {
                   ${currentBalanceByUserId}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {/* {change}% changes from original balance */}
+                  {(chartElements?.periods && chartElements?.periods?.length > 1 ) && <div>{balanceChange.change === "No change" ? "No change" : `${balanceChange.change} ${Math.abs(balanceChange.percentage)}%` } from the previous month.</div>}
                 </p>
               </CardContent>
             </Card>
@@ -328,6 +379,9 @@ if (chartElements) {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-medium">${(chartElements?.expenses && chartElements?.expenses?.length > 0) ? chartElements?.expenses?.at(-1) : 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  {(chartElements?.periods && chartElements?.periods?.length > 1 ) && <div>{expenseChange.change === "No change" ? "No change" : `${expenseChange.change} ${Math.abs(expenseChange.percentage)}%` } from the previous month.</div>}
+                </p>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-r from-[#F0FEF6] to-[#CBFFDD]">
@@ -339,6 +393,9 @@ if (chartElements) {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-medium">${(chartElements?.deposits && chartElements?.deposits?.length > 0) ? chartElements?.deposits?.at(-1) : 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  {(chartElements?.periods && chartElements?.periods?.length > 1 ) && <div>{depositChange.change === "No change" ? "No change" : `${depositChange.change} ${Math.abs(depositChange.percentage)}%` } from the previous month.</div>}
+                </p>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-r from-[#EEF5FF] to-[#CDE3FF]">
@@ -371,8 +428,10 @@ if (chartElements) {
               </CardContent>
             </Card>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="col-span-4">
+          <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
+            <Card className="col-span-1">
+          {/* <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <Card className="col-span-4"> */}
               <CardHeader>
                 <CardTitle>Statistics</CardTitle>
               </CardHeader>
@@ -384,7 +443,7 @@ if (chartElements) {
                 <div></div>
               </CardContent>
             </Card>
-            <Card className="col-span-3">
+            {/* <Card className="col-span-3">
               <CardHeader>
                 <CardTitle>Insights</CardTitle>
               </CardHeader>
@@ -397,7 +456,8 @@ if (chartElements) {
                     </ul>
                   </div>
               </CardContent>
-            </Card>
+            </Card> */
+            }
           </div>
         </TabsContent>
       </Tabs>

@@ -83,6 +83,7 @@ const DashboardPage: FunctionComponent = () => {
       const loadInitalSetup = async () => {
         try {
           if (isLoaded) {
+            console.log(user?.id);
             await getOriginalBalanceByUserId(user?.id || "");
             await getGoalByUserId(user?.id || "");
             setInitalSetupLoading(false);
