@@ -100,20 +100,17 @@ const TransactionPage: React.FC = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {!transactionsByUserId ||
-          (Array.isArray(transactionsByUserId) &&
-            transactionsByUserId.length === 0) ? (
-            <TableRow>
-              <TableCell colSpan={4}>No data</TableCell>
-            </TableRow>
-          ) : (
+          {Array.isArray(transactionsByUserId) &&
+          transactionsByUserId.length > 0 ? (
             transactionsByUserId.map((transaction) => (
               <TableRow key={transaction.id}>
                 <TableCell className="font-medium">
                   {transaction.title}
                 </TableCell>
                 <TableCell>${transaction.amount.toFixed(2)}</TableCell>
-                <TableCell>{transaction.transactionType === 0 ? "Expenses":"Income" }</TableCell>
+                <TableCell>
+                  {transaction.transactionType === 0 ? "Expenses" : "Income"}
+                </TableCell>
                 <TableCell>
                   {new Date(transaction.transactionDate).toLocaleDateString() +
                     " " +
@@ -136,6 +133,10 @@ const TransactionPage: React.FC = () => {
                 </TableCell>
               </TableRow>
             ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={4}>No data</TableCell>
+            </TableRow>
           )}
         </TableBody>
       </Table>
