@@ -166,7 +166,7 @@ const AddTransactionForm: React.FC = () => {
                     timeFormat="HH:mm"
                     timeIntervals={15}
                     timeCaption={"Time"}
-                    minDate={new Date(registered_date)}
+                    // minDate={new Date(registered_date)}
                     maxDate={new Date()} // Prevents user from selecting future date
                   />
                 </FormControl>

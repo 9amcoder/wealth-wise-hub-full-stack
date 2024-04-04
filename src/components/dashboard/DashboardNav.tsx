@@ -1,13 +1,19 @@
 "use client";
 import { UserButton } from "@clerk/nextjs";
 import { useUser } from "@clerk/clerk-react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 
-interface DashBoardNavProps {}
-
-const DashBoardNav: React.FC<DashBoardNavProps> = () => {
+const DashBoardNav: React.FC = () => {
   const { user, isLoaded } = useUser();
-  const pathname = usePathname();
+  let pathname = usePathname();
+  const params = useParams();
+
+  // Check if params contain an ID
+  if (params.id) {
+    // Remove the ID from the pathname
+    const pathParts = pathname.split('/');
+    pathname = pathParts.slice(0, pathParts.length - 1).join('/');
+  }
 
   return (
     <div className="hidden sm:flex items-center justify-between p-4 w-full md:border border-none bg-gradient-to-r from-emerald-50 to-green-100">

@@ -11,6 +11,9 @@ export async function GET(
         const transactions = await prisma.transaction.findMany({
             where: {
                 userId: params.userId
+            },
+            orderBy: {
+                transactionDate: 'desc'
             }
         });
 

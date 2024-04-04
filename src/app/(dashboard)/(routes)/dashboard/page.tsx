@@ -1,5 +1,5 @@
 "use client";
-import { FunctionComponent, useEffect, useMemo } from "react";
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,51 +8,136 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import useBalanceStore from "@/store/balanceStore";
 import { useUser } from "@clerk/nextjs";
-import useTransactionStore from "@/store/transactionStore";
 import LoadingComponent from "@/components/dashboard/Loading";
 import { Transaction } from "@prisma/client";
 import { Button } from "@/components/ui/button";
 import {
-  ArrowDownToDot,
-  ArrowUpFromDot,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   RefreshCcw,
   Wallet,
+  CircleDollarSign, Target, Banknote
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import LineChartComponent from "@/components/ui/chart";
+import useBalanceStore from "@/store/balanceStore";
+import useTransactionStore from "@/store/transactionStore";
+import useGoalStore from "@/store/goalStore";
+import useChartDataStore from "@/store/chartDataStore";
 
 const DashboardPage: FunctionComponent = () => {
   const { user, isLoaded } = useUser();
+  const router = useRouter();
+  const [chartData, setChartData] = useState({});
+  const [chartLoading, setChartLoading] = useState(true);
 
   const {
-    currentBalanceLoading,
     balanceError,
     currentBalanceByUserId,
     originalBalanceByUserId,
+    currentBalanceLoading,
     originalBalanceLoading,
     getCurrentBalanceByUserId,
+    getOriginalBalanceByUserId
   } = useBalanceStore();
 
   const {
     transactionsByUserId,
-    getTransactionByUserId,
     transactionError,
     loading,
+    getTransactionByUserId,
   } = useTransactionStore();
 
-  useEffect(() => {
-    const loadUserById = async () => {
-      try {
-        if (isLoaded) {
-          await getCurrentBalanceByUserId(user?.id || "");
-          await getTransactionByUserId(user?.id || "");
-        }
-      } catch (error) {
-        console.log(error);
+  const {
+    goalLoading,
+    goalError,
+    goalByUserId,
+    getGoalByUserId
+  } = useGoalStore();
+
+  const {
+    chartDataLoading,
+    chartDataError,
+    chartElements,
+    getChartDataByUserId,
+  } = useChartDataStore();
+
+  function redirectToInitialpage() {
+    router.push(`initial`);
+  }
+ 
+  // This useEffect is for loading user data
+useEffect(() => {
+  const loadUserById = async () => {
+    try {
+      if (isLoaded) {
+        console.log("isLoaded");
+        await getOriginalBalanceByUserId(user?.id || "");
+        await getGoalByUserId(user?.id || "");
+        await getCurrentBalanceByUserId(user?.id || "");
+        await getTransactionByUserId(user?.id || "");
+        await getChartDataByUserId(user?.id || "");
       }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  loadUserById();
+}, [getGoalByUserId, getOriginalBalanceByUserId, getCurrentBalanceByUserId, getTransactionByUserId, getChartDataByUserId, user?.id, isLoaded]);
+
+// This useEffect is for setting up the chart
+useEffect(() => {
+  if (chartElements) {
+    const setupChart = () => {
+      const data = {
+        labels: chartElements?.periods,
+        datasets: [
+          {
+            label: "Balance",
+            data: chartElements?.budgets,
+            fill: false,
+            borderColor: "rgba(52, 44, 255, 1)",
+            pointBorderColor: "blue",
+            tension: 0.1,
+          },
+          {
+            label: "Expenses",
+            data: chartElements?.expenses,
+            fill: false,
+            borderColor: "rgba(235,74, 75, 1)",
+            borderDash: [5, 5],
+            pointBorderColor: "red",
+            tension: 0.1,
+          },
+          {
+            label: "Deposits",
+            data: chartElements?.deposits,
+            fill: false,
+            borderColor: "rgba(82,233, 125, 1)",
+            borderDash: [5, 5],
+            pointBorderColor: "green",
+            tension: 0.1,
+          },
+        ],
+      };
+    
+      setChartData(data);
+      setChartLoading(false);
     };
-    loadUserById();
-  }, [getCurrentBalanceByUserId, user?.id, isLoaded, getTransactionByUserId]);
+
+    setupChart();
+  }
+}, [chartElements]);
 
   const expenses = useMemo(() => {
     if (transactionsByUserId === null) {
@@ -100,36 +185,37 @@ const DashboardPage: FunctionComponent = () => {
     return transactionsByUserId.length;
   }, [transactionsByUserId]);
 
-  const change = useMemo(() => {
-    // Ensure the original balance is not null and not zero to avoid division by zero
-    if (
-      originalBalanceByUserId === null ||
-      originalBalanceByUserId.balance === 0
-    ) {
-      return 0;
-    }
-
-    // Calculate the percentage change
-    const change =
-      ((currentBalanceByUserId - originalBalanceByUserId.balance) /
-        originalBalanceByUserId.balance) *
-      100;
-
-    return change;
-  }, [currentBalanceByUserId, originalBalanceByUserId]) as number; // The return type is number
 
   const handleRefresh = async () => {
-    console.log("Refreshing...");
     await getCurrentBalanceByUserId(user?.id || "");
     await getTransactionByUserId(user?.id || "");
+    await getChartDataByUserId(user?.id || "");
   };
 
-  if (currentBalanceLoading || loading || !isLoaded || originalBalanceLoading) {
+  if (currentBalanceLoading || loading || !isLoaded || originalBalanceLoading || chartDataLoading || chartLoading) {
     return <LoadingComponent />;
+  } else if (!originalBalanceLoading && !goalLoading) {
+    if (originalBalanceByUserId == null || goalByUserId == null) {
+      return <>
+        <AlertDialog open={true}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Balance and Goal have not been set</AlertDialogTitle>
+              <AlertDialogDescription>
+                Please setup balance and goal before begin your journey.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={redirectToInitialpage}>Go</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    }
   }
-  
-  if (balanceError || transactionError) {
-    return <div>Error: {balanceError || transactionError}</div>;
+
+  if (balanceError || transactionError || chartDataError) {
+    return <><div>Error: {balanceError || transactionError || chartDataError}</div></>;
   }
 
   return (
@@ -147,7 +233,7 @@ const DashboardPage: FunctionComponent = () => {
             <Card className="bg-gray-100">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Total Balance
+                  Current Balance
                 </CardTitle>
                 <Wallet size={20} />
               </CardHeader>
@@ -155,9 +241,6 @@ const DashboardPage: FunctionComponent = () => {
                 <div className="text-2xl font-bold">
                   ${currentBalanceByUserId}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {change}% changes from original balance
-                </p>
               </CardContent>
             </Card>
             <Card className="bg-red-50">
@@ -165,7 +248,7 @@ const DashboardPage: FunctionComponent = () => {
                 <CardTitle className="text-sm font-medium text-red-400 font-bold">
                   Total Expenses
                 </CardTitle>
-                <ArrowUpFromDot size={20} className="text-red-400" />
+                <CircleDollarSign size={20} className="text-red-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">${expenses}</div>
@@ -176,7 +259,7 @@ const DashboardPage: FunctionComponent = () => {
                 <CardTitle className="text-sm font-medium text-green-400 font-bold">
                   Total Income/Deposit
                 </CardTitle>
-                <ArrowDownToDot size={20} className="text-green-400" />
+                <Banknote size={20} className="text-green-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">${income}</div>
@@ -188,7 +271,13 @@ const DashboardPage: FunctionComponent = () => {
               <CardHeader>
                 <CardTitle>Statistics</CardTitle>
               </CardHeader>
-              <CardContent className="pl-2">{/* <Overview /> */}</CardContent>
+              <CardContent className="pl-2">
+                <LineChartComponent
+                  data={chartData}
+                  options={{ maintainAspectRatio: false }}
+                />
+                <div className="text-sm">{`(*)`} Note: Only transactions occurs after balance and goal set up are being used.</div>
+              </CardContent>
             </Card>
             <Card className="col-span-3">
               <CardHeader>
@@ -200,11 +289,10 @@ const DashboardPage: FunctionComponent = () => {
                   (transaction: Transaction) => (
                     <div
                       key={transaction.id}
-                      className={`flex flex-row justify-between ${
-                        transaction.transactionType === 0
+                      className={`flex flex-row justify-between ${transaction.transactionType === 0
                           ? "text-red-500"
                           : "text-green-500"
-                      }`}
+                        }`}
                     >
                       <div className="text-sm">{transaction.title}</div>
                       <div className="text-sm">${transaction.amount}</div>

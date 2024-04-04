@@ -14,7 +14,11 @@ const transactionSchema = z.object({
 
 export async function GET() {
   try {
-    const transactions = await prisma.transaction.findMany();
+    const transactions = await prisma.transaction.findMany({
+      orderBy: {
+        transactionDate: 'desc'
+      }
+    });
     return Response.json(transactions);
   } catch (error) {
     console.error(error);
@@ -106,7 +110,7 @@ export async function PUT(req: Request, res: Response) {
         { status: 400 }
       );
     }
-    
+
     //if transaction not found from prisma then return 404
     const findTransaction = await prisma.transaction.findUnique({
       where: {
