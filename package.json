@@ -43,6 +43,7 @@
     "chart.js": "^4.4.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "crypto-js": "^4.2.0",
     "date-fns": "^3.3.1",
     "dayjs": "^1.11.10",
     "dotenv-cli": "^7.3.0",
@@ -66,6 +67,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-datepicker": "^6.0.3",

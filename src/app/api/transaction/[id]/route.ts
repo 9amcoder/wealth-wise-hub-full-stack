@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { decryptTransaction } from "@/lib/data-encryption";
 
 const prisma = new PrismaClient();
 
@@ -41,6 +42,15 @@ export async function GET(
         id: params.id,
       },
     });
+
+    if (!transaction) {
+        return Response.error();
+    }
+
+    let decryptedTitle = decryptTransaction(transaction.title);
+
+    transaction.title = decryptedTitle;
+
     return Response.json(transaction);
   } catch (error) {
     console.error(error);

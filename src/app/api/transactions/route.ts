@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
+import { encryptTransaction } from "@/lib/data-encryption";
 
 const prisma = new PrismaClient();
 
@@ -28,7 +29,13 @@ export async function GET() {
 export async function POST(req: Request, res: Response) {
   try {
     const payload = await req.json();
-    // if user not fond from prisma then return 404
+
+    // encrypt transaction information
+    let title = payload["title"];
+    payload["title"] = encryptTransaction(title);
+
+
+    // if user not found from prisma then return 404
     const user = await prisma.user.findUnique({
       where: {
         clerkUserId: payload.userId,
@@ -76,6 +83,11 @@ export async function POST(req: Request, res: Response) {
 export async function PUT(req: Request, res: Response) {
   try {
     const payload = await req.json();
+
+    // encrypt transaction information
+    let title = payload["title"];
+    payload["title"] = encryptTransaction(title);
+
     const response = transactionSchema.safeParse(payload);
 
     if (!response.success) {
