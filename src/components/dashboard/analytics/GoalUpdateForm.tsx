@@ -157,7 +157,7 @@ export default function GoalUpdateFormComponent({ goal }: GoalUpdateFormComponen
                     title: "Goal was updated successfully",
                     duration: 10000,
                 });
-                await getGoalByUserId(user?.id);
+                await getGoalByUserId(user?.id || "");
             }
         } catch (error) {
             console.log("error", error);
