@@ -8,6 +8,11 @@ export async function GET(
     { params } : { params: { userId: string } }
 ){
     try {
+        // Check if userId is provided
+        if (!params.userId) {
+            return Response.json({ message: 'No user id' });
+        }
+
         const transactions = await prisma.transaction.findMany({
             where: {
                 userId: params.userId
@@ -17,18 +22,19 @@ export async function GET(
             }
         });
 
-        const decryptedTransaction = [];
-
-        transactions.forEach(element => {
-            let newTitle = decryptTransaction(element.title);
-            const transaction = {
+        // Check if transactions are found for the given user
+        if (transactions.length === 0) {
+            return Response.json({ message: 'No transactions found for the given user' });
+        }
+    
+        const decryptedTransaction = transactions.map((element: { title: string, [key: string]: any }) => {
+            let newTitle: string = decryptTransaction(element.title);
+            return {
                 ...element,
                 title: newTitle,
             };
-
-            decryptedTransaction.push(transaction);
         });
-
+    
         return Response.json(decryptedTransaction);
     } catch (error) {
         console.error(error);

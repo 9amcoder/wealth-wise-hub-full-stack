@@ -43,6 +43,10 @@ export async function GET(
       },
     });
 
+    if (!transaction) {
+        return Response.error();
+    }
+
     let decryptedTitle = decryptTransaction(transaction.title);
 
     transaction.title = decryptedTitle;
