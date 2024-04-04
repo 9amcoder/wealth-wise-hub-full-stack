@@ -40,7 +40,6 @@ const DashboardPage: FunctionComponent = () => {
   const router = useRouter();
   const [chartData, setChartData] = useState({});
   const [chartLoading, setChartLoading] = useState(true);
-  const [dataLoaded, setDataLoaded] = useState(false);
 
   const {
     balanceError,
@@ -73,66 +72,72 @@ const DashboardPage: FunctionComponent = () => {
     getChartDataByUserId,
   } = useChartDataStore();
 
-  async function setupChart() {
-    const data = {
-      labels: chartElements?.periods,
-      datasets: [
-        {
-          label: "Balance",
-          data: chartElements?.budgets,
-          fill: false,
-          borderColor: "rgba(52, 44, 255, 1)",
-          pointBorderColor: "blue",
-          tension: 0.1,
-        },
-        {
-          label: "Expenses",
-          data: chartElements?.expenses,
-          fill: false,
-          borderColor: "rgba(235,74, 75, 1)",
-          borderDash: [5, 5],
-          pointBorderColor: "red",
-          tension: 0.1,
-        },
-        {
-          label: "Deposits",
-          data: chartElements?.deposits,
-          fill: false,
-          borderColor: "rgba(82,233, 125, 1)",
-          borderDash: [5, 5],
-          pointBorderColor: "green",
-          tension: 0.1,
-        },
-      ],
-    };
-  
-    setChartData(data);
-    setChartLoading(false);
-  };
-
   function redirectToInitialpage() {
     router.push(`initial`);
   }
  
-  useEffect(() => {
-    const loadUserById = async () => {
-      try {
-        if (isLoaded) {
-          console.log("isLoaded");
-          await getOriginalBalanceByUserId(user?.id || "");
-          await getGoalByUserId(user?.id || "");
-          await getCurrentBalanceByUserId(user?.id || "");
-          await getTransactionByUserId(user?.id || "");
-          await getChartDataByUserId(user?.id || "");
-          await setupChart();
-          setDataLoaded(true); // set dataLoaded to true only after all operations are done
-        }
-      } catch (error) {
-        console.log(error);
+  // This useEffect is for loading user data
+useEffect(() => {
+  const loadUserById = async () => {
+    try {
+      if (isLoaded) {
+        console.log("isLoaded");
+        await getOriginalBalanceByUserId(user?.id || "");
+        await getGoalByUserId(user?.id || "");
+        await getCurrentBalanceByUserId(user?.id || "");
+        await getTransactionByUserId(user?.id || "");
+        await getChartDataByUserId(user?.id || "");
       }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  loadUserById();
+}, [getGoalByUserId, getOriginalBalanceByUserId, getCurrentBalanceByUserId, getTransactionByUserId, getChartDataByUserId, user?.id, isLoaded]);
+
+// This useEffect is for setting up the chart
+useEffect(() => {
+  if (chartElements) {
+    const setupChart = () => {
+      const data = {
+        labels: chartElements?.periods,
+        datasets: [
+          {
+            label: "Balance",
+            data: chartElements?.budgets,
+            fill: false,
+            borderColor: "rgba(52, 44, 255, 1)",
+            pointBorderColor: "blue",
+            tension: 0.1,
+          },
+          {
+            label: "Expenses",
+            data: chartElements?.expenses,
+            fill: false,
+            borderColor: "rgba(235,74, 75, 1)",
+            borderDash: [5, 5],
+            pointBorderColor: "red",
+            tension: 0.1,
+          },
+          {
+            label: "Deposits",
+            data: chartElements?.deposits,
+            fill: false,
+            borderColor: "rgba(82,233, 125, 1)",
+            borderDash: [5, 5],
+            pointBorderColor: "green",
+            tension: 0.1,
+          },
+        ],
+      };
+    
+      setChartData(data);
+      setChartLoading(false);
     };
-    loadUserById();
-  }, [getGoalByUserId, getOriginalBalanceByUserId, getCurrentBalanceByUserId, getTransactionByUserId, getChartDataByUserId, user?.id, isLoaded]);
+
+    setupChart();
+  }
+}, [chartElements]);
 
   const expenses = useMemo(() => {
     if (transactionsByUserId === null) {
@@ -185,7 +190,6 @@ const DashboardPage: FunctionComponent = () => {
     await getCurrentBalanceByUserId(user?.id || "");
     await getTransactionByUserId(user?.id || "");
     await getChartDataByUserId(user?.id || "");
-    await setupChart();
   };
 
   if (currentBalanceLoading || loading || !isLoaded || originalBalanceLoading || chartDataLoading || chartLoading) {

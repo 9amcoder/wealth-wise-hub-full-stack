@@ -128,7 +128,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   const balanceChange = useMemo(() => {
     // Ensure the balances is not null and not zero to avoid division by zero
     if (
-      chartElements?.budgets?.length <= 0 || chartElements?.budgets?.at(-1) == null || chartElements?.budgets?.at(-2) == null || chartElements?.budgets?.at(-2) == 0
+      (chartElements?.budgets && chartElements?.budgets?.length <= 0) || chartElements?.budgets?.at(-1) == null || chartElements?.budgets?.at(-2) == null || chartElements?.budgets?.at(-2) == 0
     ) {
       return 0;
     }
@@ -150,7 +150,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
   const expenseChange = useMemo(() => {
     // Ensure the balances is not null and not zero to avoid division by zero
     if (
-      chartElements?.expenses?.length <= 0 || chartElements?.expenses?.at(-1) == null || chartElements?.expenses?.at(-2) == null || chartElements?.expenses?.at(-2) == 0
+      (chartElements?.expenses && chartElements?.expenses?.length <= 0 )|| chartElements?.expenses?.at(-1) == null || chartElements?.expenses?.at(-2) == null || chartElements?.expenses?.at(-2) == 0
     ) {
       return 0;
     }
@@ -188,14 +188,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
       }
     };
     loadUserById();
-  }, [
-    getOriginalBalanceByUserId,
-    getCurrentBalanceByUserId,
-    getGoalByUserId,
-    getChartDataByUserId,
-    user?.id,
-    isLoaded
-  ]);
+  }, [getOriginalBalanceByUserId, getCurrentBalanceByUserId, getGoalByUserId, getChartDataByUserId, user?.id, isLoaded, setupChart]);
 
   const handleRefresh = async () => {
     await getOriginalBalanceByUserId(user?.id || "");
@@ -283,7 +276,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                 <CircleDollarSign size={20} className="text-red-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-medium">${chartElements?.expenses?.length > 0 ? chartElements?.expenses?.at(-1) : 0}</div>
+                <div className="text-2xl font-medium">${(chartElements?.expenses && chartElements?.expenses?.length > 0) ? chartElements?.expenses?.at(-1) : 0}</div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-r from-[#F0FEF6] to-[#CBFFDD]">
@@ -294,7 +287,7 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
                 <Banknote size={20} className="text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-medium">${chartElements?.deposits?.length > 0 ? chartElements?.deposits?.at(-1) : 0}</div>
+                <div className="text-2xl font-medium">${(chartElements?.deposits && chartElements?.deposits?.length > 0) ? chartElements?.deposits?.at(-1) : 0}</div>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-r from-[#EEF5FF] to-[#CDE3FF]">
@@ -347,9 +340,9 @@ const AnalyticPage: React.FC<AnalyticPageProps> = () => {
               <CardContent>
                   <div>
                     <ul className="list-disc">
-                      {chartElements?.periods?.length > 1 && <li>Balance {balanceChange == 0 ? "did not change" : balanceChange < 0 ? `has been decreased at ${Math.abs(balanceChange)}% ` : `has been increased at ${Math.abs(balanceChange)}%` } from the previous month.</li>}
-                      {chartElements?.periods?.length > 1 && <li><li>Expense was {expenseChange == 0 ? "unchanged from" : expenseChange < 0 ? `${Math.abs(expenseChange)}% lower than` : `${Math.abs(expenseChange)}% higher than` } the previous month.</li></li>}  
-                      {chartElements?.periods?.length <= 1 && <li>There is not enough information for insights.</li>}
+                      {(chartElements?.periods && chartElements?.periods?.length > 1 ) && <li>Balance {balanceChange == 0 ? "did not change" : balanceChange < 0 ? `has been decreased at ${Math.abs(balanceChange)}% ` : `has been increased at ${Math.abs(balanceChange)}%` } from the previous month.</li>}
+                      {(chartElements?.periods && chartElements?.periods?.length > 1) && <li><li>Expense was {expenseChange == 0 ? "unchanged from" : expenseChange < 0 ? `${Math.abs(expenseChange)}% lower than` : `${Math.abs(expenseChange)}% higher than` } the previous month.</li></li>}  
+                      {(chartElements?.periods && chartElements?.periods?.length <= 1 )&& <li>There is not enough information for insights.</li>}
                     </ul>
                   </div>
               </CardContent>
