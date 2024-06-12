@@ -6,6 +6,7 @@
 * Prisma
 * Clerk
 * Vercel
+* E2E Testing with Playrigt
   
 ## Introduction 
 * Minimal finantial management full stack web app with AI receipt analyzing capability 
