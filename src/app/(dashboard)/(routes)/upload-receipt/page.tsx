@@ -57,7 +57,7 @@ const UploadReceiptPage: React.FC = () => {
         setSelectedFile(reader.result as string);
       };
       reader.readAsDataURL(file);
-      console.log(reader);
+      // console.log(reader);
     }
   };
 
@@ -66,25 +66,24 @@ const UploadReceiptPage: React.FC = () => {
       if (selectedFile) var base64 = selectedFile.split("base64,")[1];
 
       const req = { base64Source: base64 };
-      console.log("process.env.AZURE_KEY", process.env.AZURE_KEY);
       const response = await post(
         "https://wealthwise-receipts.cognitiveservices.azure.com/formrecognizer/documentModels/prebuilt-receipt:analyze?api-version=2023-07-31",
         req,
         {
           headers: {
-            "Ocp-Apim-Subscription-Key": "6c6f66256d75448b881ab78b392dbc3e",
+            "Ocp-Apim-Subscription-Key": "xxx",
             "Content-Type": "application/json",
           },
         }
       );
 
-      console.log(
-        "Document analysis response:",
-        response.headers["apim-request-id"]
-      );
+      // console.log(
+      //   "Document analysis response:",
+      //   response.headers["apim-request-id"]
+      // );
       const operationId = response.headers["apim-request-id"];
 
-      console.log("operationId", operationId);
+      // console.log("operationId", operationId);
       return operationId;
     } catch (error) {
       console.error("Error fetching results:", error);
@@ -131,7 +130,7 @@ const UploadReceiptPage: React.FC = () => {
           `https://wealthwise-receipts.cognitiveservices.azure.com/formrecognizer/documentModels/prebuilt-receipt/analyzeResults/${operationId}?api-version=2023-07-31`,
           {
             headers: {
-              "Ocp-Apim-Subscription-Key": "6c6f66256d75448b881ab78b392dbc3e",
+              "Ocp-Apim-Subscription-Key": "xxx",
             },
           }
         );
@@ -139,13 +138,13 @@ const UploadReceiptPage: React.FC = () => {
         const { data } = response;
         if (data.status === "running" && retries < maxRetries) {
           retries++;
-          console.log(
-            `Retrying after 5 seconds (Retry ${retries}/${maxRetries})`
-          );
+          // console.log(
+          //   `Retrying after 5 seconds (Retry ${retries}/${maxRetries})`
+          // );
           await new Promise((resolve) => setTimeout(resolve, 2000)); // Delay for 2 seconds before retrying
           return fetchResults(); // Retry the request
         } else if (data.status === "succeeded") {
-          console.log("Results:", data);
+          // console.log("Results:", data);
           return data; // Return the final results
         } else {
           throw new Error("Unexpected status or max retries reached");
@@ -201,7 +200,7 @@ const UploadReceiptPage: React.FC = () => {
           duration: 10000,
         });
       } catch (error) {
-        console.log("error", error);
+        // console.log("error", error);
         toast({
           title: "Transaction failed to add",
           description: "error",
